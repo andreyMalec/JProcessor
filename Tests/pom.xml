@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="http://maven.apache.org/POM/4.0.0"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <artifactId>Tests</artifactId>
+    <dependencies>
+        <dependency>
+            <artifactId>Processor</artifactId>
+            <groupId>com.malec</groupId>
+            <version>0.1</version>
+        </dependency>
+        <dependency>
+            <artifactId>junit</artifactId>
+            <groupId>junit</groupId>
+            <scope>test</scope>
+            <version>${junit.version}</version>
+        </dependency>
+    </dependencies>
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <artifactId>JProcessor</artifactId>
+        <groupId>com.malec</groupId>
+        <version>0.1</version>
+    </parent>
+    <properties>
+        <junit.version>4.13.1</junit.version>
+    </properties>
+</project>
