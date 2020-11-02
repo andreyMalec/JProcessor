@@ -1,7 +1,7 @@
 package com.malec.jProcessor.tests;
 
-import com.malec.jProcessor.processor.Any;
-import com.malec.jProcessor.processor.Default;
+import com.malec.jProcessor.processor.annotation.Any;
+import com.malec.jProcessor.processor.annotation.Default;
 
 @Default(args = {@Any(name = "testString", value = "\"123\""), @Any(name = "testString2", value = "abc"), @Any(name = "testDouble", value = "321.4")})
 public class TestClass {

@@ -1,6 +1,7 @@
 package com.malec.jProcessor.processor;
 
 import com.google.auto.service.AutoService;
+import com.malec.jProcessor.processor.annotation.Default;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -16,7 +17,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 
 @AutoService(Processor.class)
-@SupportedAnnotationTypes({"com.malec.jProcessor.processor.Default"})
+@SupportedAnnotationTypes({"com.malec.jProcessor.processor.annotation.Default"})
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
 public class JProcessor extends AbstractProcessor {
     private final Map<TypeElement, BuilderVisitor> visitors = new HashMap<>();

@@ -1,10 +1,17 @@
 package com.malec.jProcessor.processor;
 
+import com.malec.jProcessor.processor.annotation.Any;
+import com.malec.jProcessor.processor.annotation.Default;
+import com.malec.jProcessor.processor.generation.DefaultConstructorGenerator;
+import com.malec.jProcessor.processor.generation.PrintWriterPrinter;
+import com.malec.jProcessor.processor.generation.TabbedPrinter;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.stream.IntStream;
+import java.util.stream.Collectors;
 
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Messager;
@@ -20,10 +27,11 @@ public class BuilderVisitor extends ElementScanner7<Void, Void> {
 
     private final Filer mFiler;
 
+    private final String className;
+
     private List<String> argsNames = new ArrayList<>();
     private List<String> argsTypes = new ArrayList<>();
-    private String className;
-    private Any[] args;
+    private Any[] optional;
 
     public BuilderVisitor(ProcessingEnvironment env, TypeElement element) {
         super();
@@ -34,8 +42,8 @@ public class BuilderVisitor extends ElementScanner7<Void, Void> {
 
     @Override
     public Void visitVariable(VariableElement field, Void aVoid) {
-        Default aDefault = field.getEnclosingElement().getAnnotation(Default.class);
-        args = aDefault.args();
+        Default byDefault = field.getEnclosingElement().getAnnotation(Default.class);
+        optional = byDefault.args();
 
         argsNames.add(field.getSimpleName().toString());
         argsTypes.add(field.asType().toString());
@@ -44,114 +52,39 @@ public class BuilderVisitor extends ElementScanner7<Void, Void> {
     }
 
     public void generateCode() throws IOException {
-        String packageName = null;
-        int lastDot = className.lastIndexOf('.');
-        if (lastDot > 0) {
-            packageName = className.substring(0, lastDot);
-        }
+        List<Argument> args = Arrays.stream(optional)
+                .map(it -> new Argument(null, it.name(), it.value())).collect(Collectors.toList());
 
-        String simpleClassName = className.substring(lastDot + 1);
-        String builderClassName = className + "Constructor";
-        String builderSimpleClassName = builderClassName.substring(lastDot + 1);
+        //        mLogger.printMessage(Diagnostic.Kind.NOTE, "Analyze " + simpleClassName + "...");
+        //
+        //        StringBuilder argsString = new StringBuilder();
 
-        mLogger.printMessage(Diagnostic.Kind.NOTE, "Analyze " + simpleClassName + "...");
+        //        String argsStringFinal = argsString
+        //                .replace(argsString.length() - 2, argsString.length(), "").toString();
+        //        mLogger.printMessage(Diagnostic.Kind.NOTE,
+        //                "Found [" + argsStringFinal + "](" + args.length + ") fields need to be filled"
+        //        );
+        //
+        //        mLogger.printMessage(Diagnostic.Kind.NOTE, "Creating " + builderSimpleClassName + "...");
 
-        StringBuilder argsString = new StringBuilder();
-        for (Any arg : args) {
-            int i = argsNames.indexOf(arg.name());
+        String constructorClassName = className + "Constructor";
+        JavaFileObject constructorFile = mFiler.createSourceFile(constructorClassName);
+
+        for (Argument arg : args) {
+            int i = argsNames.indexOf(arg.name);
             if (i >= 0) {
                 argsNames.remove(i);
                 argsTypes.remove(i);
             }
-            argsString.append(arg.name());
-            argsString.append(", ");
         }
-        String argsStringFinal = argsString
-                .replace(argsString.length() - 2, argsString.length(), "").toString();
-        mLogger.printMessage(Diagnostic.Kind.NOTE,
-                "Found [" + argsStringFinal + "](" + args.length + ") fields need to be filled"
-        );
+        for (int i = 0; i < argsNames.size(); i++)
+            args.add(new Argument(argsTypes.get(i), argsNames.get(i), null));
 
-        mLogger.printMessage(Diagnostic.Kind.NOTE, "Creating " + builderSimpleClassName + "...");
+        mLogger.printMessage(Diagnostic.Kind.NOTE, "Analyze " + className + "...");
 
-        JavaFileObject builderFile = mFiler.createSourceFile(builderClassName);
-
-        try (PrintWriter out = new PrintWriter(builderFile.openWriter())) {
-
-            if (packageName != null) {
-                out.print("package ");
-                out.print(packageName);
-                out.println(";");
-                out.println();
-            }
-
-            out.print("import ");
-            out.print(className);
-            out.println(";");
-            out.println();
-
-            out.print("public final class ");
-            out.print(builderSimpleClassName);
-            out.println(" {");
-            out.println();
-
-            out.print("    public static ");
-            out.print(simpleClassName);
-            out.print(" byDefault(");
-            final int[] i = {0};
-            argsNames.forEach(e -> {
-                out.print(argsTypes.get(i[0]));
-                out.print(" ");
-                out.print(e);
-                if (++i[0] < argsNames.size())
-                    out.print(", ");
-            });
-            out.println(") {");
-            out.print("        ");
-            out.print(simpleClassName);
-            out.print(" object = new ");
-            out.print(simpleClassName);
-            out.print("()");
-            out.println(";");
-
-            argsNames.forEach(it -> {
-                out.print("        object.");
-                out.print(it);
-                out.print(" = ");
-                out.print(it);
-                out.println(";");
-            });
-            for (Any arg : args) {
-                out.print("        object.");
-                out.print(arg.name());
-                out.print(" = ");
-                boolean isString = isString(arg.value());
-                if (isString)
-                    out.print("\"");
-                out.print(arg.value());
-                if (isString)
-                    out.print("\"");
-                out.println(";");
-            }
-
-            out.println();
-            out.println("        return object;");
-            out.println("    }");
-
-            out.println("}");
+        try (PrintWriter out = new PrintWriter(constructorFile.openWriter())) {
+            TabbedPrinter printer = new PrintWriterPrinter(out);
+            new DefaultConstructorGenerator(printer, className, args).generate();
         }
-    }
-
-    private boolean isString(String value) {
-        IntStream v = value.chars();
-        String vL = value.toLowerCase();
-
-        if (v.anyMatch(Character::isDigit))
-            return false;
-
-        if (vL.equals("true") || vL.equals("false"))
-            return false;
-
-        return true;
     }
 }
