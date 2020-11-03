@@ -14,6 +14,7 @@ public class DefaultConstructorGenerator implements CodeGenerator {
     private final String constructorSimpleClassName;
     private final List<Argument> args;
     private TabbedPrinter p;
+    private Logger logger = null;
 
     public DefaultConstructorGenerator(TabbedPrinter printer, String className, List<Argument> args) {
         this.p = printer;
@@ -30,12 +31,28 @@ public class DefaultConstructorGenerator implements CodeGenerator {
 
     @Override
     public void generate() {
+        logNote("Working on " + className + "...");
+
         appendPackage(packageName);
         appendImport(className);
 
+        logNote("Constructing class " + constructorSimpleClassName + "...");
         openClass(constructorSimpleClassName);
         appendMethod(simpleClassName, "byDefault", args);
+
         closeClass();
+        logNote("Class " + constructorSimpleClassName + " successfully created");
+    }
+
+    public DefaultConstructorGenerator addLogger(Logger logger) {
+        this.logger = logger;
+
+        return this;
+    }
+
+    private void logNote(String text) {
+        if (logger != null)
+            logger.note(text);
     }
 
     protected void appendPackage(String packageName) {
@@ -71,9 +88,11 @@ public class DefaultConstructorGenerator implements CodeGenerator {
 
     protected void appendMethod(String returnType, String name, List<Argument> args) {
         p.tabbedPrint("public static ", returnType, " ", name, "(");
-        final int[] i = {0};
         List<Argument> requiredArguments = args.stream().filter(it -> it.value == null)
                 .collect(Collectors.toList());
+
+        logNote("Append method byDefault arguments " + requiredArguments);
+        final int[] i = {0};
         requiredArguments.forEach(it -> {
             p.print(it.type, " ", it.name);
             if (++i[0] < requiredArguments.size())
@@ -86,6 +105,7 @@ public class DefaultConstructorGenerator implements CodeGenerator {
         p.tabbedPrint(simpleClassName, " object = new ", simpleClassName, "();");
         p.newLine();
 
+        logNote("Append method byDefault body: Required arguments " + requiredArguments);
         requiredArguments.forEach(it -> {
             p.tabbedPrint("object.", it.name, " = ", it.name, ";");
             p.newLine();
@@ -93,6 +113,8 @@ public class DefaultConstructorGenerator implements CodeGenerator {
 
         List<Argument> defaultArguments = args.stream().filter(it -> it.value != null)
                 .collect(Collectors.toList());
+
+        logNote("Append method byDefault body: Default arguments " + defaultArguments);
         defaultArguments.forEach(it -> {
             p.tabbedPrint("object.", it.name, " = ", stringArgument(it.value), ";");
             p.newLine();

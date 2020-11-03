@@ -2,6 +2,7 @@ package com.malec.jProcessor.processor;
 
 import com.malec.jProcessor.processor.annotation.Any;
 import com.malec.jProcessor.processor.annotation.Default;
+import com.malec.jProcessor.processor.generation.BaseLogger;
 import com.malec.jProcessor.processor.generation.DefaultConstructorGenerator;
 import com.malec.jProcessor.processor.generation.PrintWriterPrinter;
 import com.malec.jProcessor.processor.generation.TabbedPrinter;
@@ -19,11 +20,10 @@ import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.util.ElementScanner7;
-import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 
 public class BuilderVisitor extends ElementScanner7<Void, Void> {
-    private final Messager mLogger;
+    private final Messager messager;
 
     private final Filer mFiler;
 
@@ -35,7 +35,7 @@ public class BuilderVisitor extends ElementScanner7<Void, Void> {
 
     public BuilderVisitor(ProcessingEnvironment env, TypeElement element) {
         super();
-        mLogger = env.getMessager();
+        messager = env.getMessager();
         mFiler = env.getFiler();
         className = element.getQualifiedName().toString();
     }
@@ -52,23 +52,11 @@ public class BuilderVisitor extends ElementScanner7<Void, Void> {
     }
 
     public void generateCode() throws IOException {
-        List<Argument> args = Arrays.stream(optional)
-                .map(it -> new Argument(null, it.name(), it.value())).collect(Collectors.toList());
-
-        //        mLogger.printMessage(Diagnostic.Kind.NOTE, "Analyze " + simpleClassName + "...");
-        //
-        //        StringBuilder argsString = new StringBuilder();
-
-        //        String argsStringFinal = argsString
-        //                .replace(argsString.length() - 2, argsString.length(), "").toString();
-        //        mLogger.printMessage(Diagnostic.Kind.NOTE,
-        //                "Found [" + argsStringFinal + "](" + args.length + ") fields need to be filled"
-        //        );
-        //
-        //        mLogger.printMessage(Diagnostic.Kind.NOTE, "Creating " + builderSimpleClassName + "...");
-
         String constructorClassName = className + "Constructor";
         JavaFileObject constructorFile = mFiler.createSourceFile(constructorClassName);
+
+        List<Argument> args = Arrays.stream(optional)
+                .map(it -> new Argument(null, it.name(), it.value())).collect(Collectors.toList());
 
         for (Argument arg : args) {
             int i = argsNames.indexOf(arg.name);
@@ -80,11 +68,10 @@ public class BuilderVisitor extends ElementScanner7<Void, Void> {
         for (int i = 0; i < argsNames.size(); i++)
             args.add(new Argument(argsTypes.get(i), argsNames.get(i), null));
 
-        mLogger.printMessage(Diagnostic.Kind.NOTE, "Analyze " + className + "...");
-
         try (PrintWriter out = new PrintWriter(constructorFile.openWriter())) {
             TabbedPrinter printer = new PrintWriterPrinter(out);
-            new DefaultConstructorGenerator(printer, className, args).generate();
+            new DefaultConstructorGenerator(printer, className, args)
+                    .addLogger(new BaseLogger(messager)).generate();
         }
     }
 }
