@@ -16,7 +16,7 @@
     <parent>
         <artifactId>JProcessor</artifactId>
         <groupId>com.malec</groupId>
-        <version>0.4</version>
+        <version>0.5</version>
     </parent>
     <properties>
         <autoService.version>1.0-rc7</autoService.version>

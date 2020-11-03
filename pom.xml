@@ -16,6 +16,14 @@
             </plugin>
         </plugins>
     </build>
+    <dependencies>
+        <dependency>
+            <artifactId>junit</artifactId>
+            <groupId>junit</groupId>
+            <scope>test</scope>
+            <version>${junit.version}</version>
+        </dependency>
+    </dependencies>
     <groupId>com.malec</groupId>
     <modelVersion>4.0.0</modelVersion>
     <modules>
@@ -23,6 +31,10 @@
         <module>Tests</module>
     </modules>
     <packaging>pom</packaging>
-    <version>0.4</version>
 
+    <properties>
+        <junit.version>4.13.1</junit.version>
+    </properties>
+
+    <version>0.5</version>
 </project>

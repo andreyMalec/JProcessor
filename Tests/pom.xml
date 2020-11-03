@@ -7,13 +7,7 @@
         <dependency>
             <artifactId>Processor</artifactId>
             <groupId>com.malec</groupId>
-            <version>0.4</version>
-        </dependency>
-        <dependency>
-            <artifactId>junit</artifactId>
-            <groupId>junit</groupId>
-            <scope>test</scope>
-            <version>${junit.version}</version>
+            <version>0.5</version>
         </dependency>
     </dependencies>
 
@@ -22,9 +16,6 @@
     <parent>
         <artifactId>JProcessor</artifactId>
         <groupId>com.malec</groupId>
-        <version>0.4</version>
+        <version>0.5</version>
     </parent>
-    <properties>
-        <junit.version>4.13.1</junit.version>
-    </properties>
 </project>

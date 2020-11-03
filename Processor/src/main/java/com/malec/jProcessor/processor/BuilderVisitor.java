@@ -2,7 +2,6 @@ package com.malec.jProcessor.processor;
 
 import com.malec.jProcessor.processor.annotation.Any;
 import com.malec.jProcessor.processor.annotation.Default;
-import com.malec.jProcessor.processor.generation.BaseLogger;
 import com.malec.jProcessor.processor.generation.DefaultConstructorGenerator;
 import com.malec.jProcessor.processor.generation.PrintWriterPrinter;
 import com.malec.jProcessor.processor.generation.TabbedPrinter;
@@ -70,8 +69,7 @@ public class BuilderVisitor extends ElementScanner7<Void, Void> {
 
         try (PrintWriter out = new PrintWriter(constructorFile.openWriter())) {
             TabbedPrinter printer = new PrintWriterPrinter(out);
-            new DefaultConstructorGenerator(printer, className, args)
-                    .addLogger(new BaseLogger(messager)).generate();
+            new DefaultConstructorGenerator(printer, className, args).generate();
         }
     }
 }
