@@ -1,10 +1,17 @@
 package com.malec.jProcessor.processor;
 
-import com.malec.jProcessor.processor.annotation.Any;
+import com.malec.jProcessor.processor.annotation.Arg;
 import com.malec.jProcessor.processor.annotation.Default;
 import com.malec.jProcessor.processor.generation.DefaultConstructorGenerator;
 import com.malec.jProcessor.processor.generation.PrintWriterPrinter;
 import com.malec.jProcessor.processor.generation.TabbedPrinter;
+import com.sun.source.util.Trees;
+import com.sun.tools.javac.processing.JavacProcessingEnvironment;
+import com.sun.tools.javac.tree.JCTree;
+import com.sun.tools.javac.tree.TreeMaker;
+import com.sun.tools.javac.tree.TreeTranslator;
+import com.sun.tools.javac.util.Context;
+import com.sun.tools.javac.util.Names;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -16,23 +23,23 @@ import java.util.stream.Collectors;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.util.ElementScanner7;
 import javax.tools.JavaFileObject;
 
-public class BuilderVisitor extends ElementScanner7<Void, Void> {
+public class DefaultConstructorVisitor extends ElementScanner7<Void, Void> {
     private final Messager messager;
-
     private final Filer mFiler;
 
     private final String className;
 
     private List<String> argsNames = new ArrayList<>();
     private List<String> argsTypes = new ArrayList<>();
-    private Any[] optional;
+    private Arg[] optional;
 
-    public BuilderVisitor(ProcessingEnvironment env, TypeElement element) {
+    public DefaultConstructorVisitor(ProcessingEnvironment env, TypeElement element) {
         super();
         messager = env.getMessager();
         mFiler = env.getFiler();

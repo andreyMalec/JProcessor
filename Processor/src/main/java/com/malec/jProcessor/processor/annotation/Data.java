@@ -7,6 +7,4 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.SOURCE)
 @Target({ElementType.TYPE})
-public @interface Default {
-    Arg[] args() default {};
-}
+public @interface Data {}
