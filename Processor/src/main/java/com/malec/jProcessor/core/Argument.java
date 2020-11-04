@@ -1,4 +1,4 @@
-package com.malec.jProcessor.processor;
+package com.malec.jProcessor.core;
 
 public class Argument {
     public String type, name, value;

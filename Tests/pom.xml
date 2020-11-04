@@ -7,7 +7,7 @@
         <dependency>
             <artifactId>Processor</artifactId>
             <groupId>com.malec</groupId>
-            <version>0.5</version>
+            <version>0.7</version>
         </dependency>
     </dependencies>
 
@@ -16,6 +16,6 @@
     <parent>
         <artifactId>JProcessor</artifactId>
         <groupId>com.malec</groupId>
-        <version>0.5</version>
+        <version>0.7</version>
     </parent>
 </project>

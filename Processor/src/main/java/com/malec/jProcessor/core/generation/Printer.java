@@ -1,4 +1,4 @@
-package com.malec.jProcessor.processor.generation;
+package com.malec.jProcessor.core.generation;
 
 public interface Printer {
     void print(String text);

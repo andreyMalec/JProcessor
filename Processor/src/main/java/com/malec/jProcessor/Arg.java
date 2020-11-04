@@ -1,4 +1,4 @@
-package com.malec.jProcessor.processor.annotation;
+package com.malec.jProcessor;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -7,6 +7,8 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.SOURCE)
 @Target({ElementType.TYPE})
-public @interface Default {
-    Any[] args() default {};
+public @interface Arg {
+    String name() default "";
+
+    String value() default "";
 }
