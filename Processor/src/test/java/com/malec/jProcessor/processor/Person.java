@@ -4,9 +4,13 @@ import com.malec.jProcessor.processor.annotation.Data;
 
 @Data
 public class Person {
-    private Integer age = 0;
-    private String name;
-    private String surname;
-    private String passport;
-    private String gender;
+    int age;
+    String name;
+    String surname;
+    String passport;
+    String gender;
+
+    public int test() {
+        return 9;
+    }
 }

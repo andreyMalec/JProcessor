@@ -10,15 +10,15 @@
             <version>${autoService.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.sun</groupId>
             <artifactId>tools</artifactId>
-            <version>1.5.0</version>
+            <groupId>com.sun</groupId>
             <scope>system</scope>
             <systemPath>${java.home}/lib/tools.jar</systemPath>
+            <version>1.5.0</version>
         </dependency>
         <dependency>
-            <groupId>com.google.testing.compile</groupId>
             <artifactId>compile-testing</artifactId>
+            <groupId>com.google.testing.compile</groupId>
             <version>0.19</version>
         </dependency>
     </dependencies>
@@ -28,7 +28,7 @@
     <parent>
         <artifactId>JProcessor</artifactId>
         <groupId>com.malec</groupId>
-        <version>0.5</version>
+        <version>0.6</version>
     </parent>
     <properties>
         <autoService.version>1.0-rc7</autoService.version>
