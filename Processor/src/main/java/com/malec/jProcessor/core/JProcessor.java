@@ -1,8 +1,8 @@
-package com.malec.jProcessor.processor;
+package com.malec.jProcessor.core;
 
 import com.google.auto.service.AutoService;
-import com.malec.jProcessor.processor.annotation.Data;
-import com.malec.jProcessor.processor.annotation.Default;
+import com.malec.jProcessor.Data;
+import com.malec.jProcessor.Default;
 import com.sun.source.util.Trees;
 import com.sun.tools.javac.code.Flags;
 import com.sun.tools.javac.code.TypeTag;
@@ -41,7 +41,7 @@ import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
 
 @AutoService(Processor.class)
-@SupportedAnnotationTypes({"com.malec.jProcessor.processor.annotation.Default", "com.malec.jProcessor.processor.annotation.Data"})
+@SupportedAnnotationTypes({"com.malec.jProcessor.Default", "com.malec.jProcessor.Data"})
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
 public class JProcessor extends AbstractProcessor {
     private final Map<TypeElement, DefaultConstructorVisitor> visitors = new HashMap<>();

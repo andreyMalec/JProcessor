@@ -1,4 +1,4 @@
-package com.malec.jProcessor.processor.generation;
+package com.malec.jProcessor.core.generation;
 
 import javax.annotation.processing.Messager;
 import javax.tools.Diagnostic;

@@ -1,6 +1,6 @@
-package com.malec.jProcessor.processor.generation;
+package com.malec.jProcessor.core.generation;
 
-import com.malec.jProcessor.processor.Argument;
+import com.malec.jProcessor.core.Argument;
 
 import java.util.ArrayList;
 import java.util.List;

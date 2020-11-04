@@ -1,4 +1,4 @@
-package com.malec.jProcessor.processor.generation;
+package com.malec.jProcessor.core.generation;
 
 import java.io.PrintWriter;
 import java.util.Collections;

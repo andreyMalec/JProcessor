@@ -1,10 +1,10 @@
-package com.malec.jProcessor.processor;
+package com.malec.jProcessor.core;
 
-import com.malec.jProcessor.processor.annotation.Arg;
-import com.malec.jProcessor.processor.annotation.Default;
-import com.malec.jProcessor.processor.generation.DefaultConstructorGenerator;
-import com.malec.jProcessor.processor.generation.PrintWriterPrinter;
-import com.malec.jProcessor.processor.generation.TabbedPrinter;
+import com.malec.jProcessor.Arg;
+import com.malec.jProcessor.Default;
+import com.malec.jProcessor.core.generation.DefaultConstructorGenerator;
+import com.malec.jProcessor.core.generation.PrintWriterPrinter;
+import com.malec.jProcessor.core.generation.TabbedPrinter;
 
 import java.io.IOException;
 import java.io.PrintWriter;

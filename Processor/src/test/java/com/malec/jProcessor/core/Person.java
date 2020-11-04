@@ -1,6 +1,6 @@
-package com.malec.jProcessor.processor;
+package com.malec.jProcessor.core;
 
-import com.malec.jProcessor.processor.annotation.Data;
+import com.malec.jProcessor.Data;
 
 @Data
 public class Person {

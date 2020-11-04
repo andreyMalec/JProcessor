@@ -1,4 +1,4 @@
-package com.malec.jProcessor.processor;
+package com.malec.jProcessor.core;
 
 import com.google.common.base.Joiner;
 import com.google.testing.compile.Compilation;
