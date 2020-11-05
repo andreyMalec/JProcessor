@@ -14,9 +14,6 @@ import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.Names;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.processing.AbstractProcessor;
@@ -32,27 +29,22 @@ import javax.lang.model.element.TypeElement;
 @SupportedAnnotationTypes({"com.malec.jProcessor.Default", "com.malec.jProcessor.Data"})
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
 public class JProcessor extends AbstractProcessor {
-    private final Map<TypeElement, DefaultConstructorVisitor> visitors = new HashMap<>();
     private Trees trees;
-    private TreeMaker maker;
-    private Names names;
     private Logger logger;
-
-    private DataVisitor dataVisitor;
+    private ClassGenerator generator;
+    private ClassTreeAdapter adapter;
 
     @Override
     public synchronized void init(ProcessingEnvironment env) {
         super.init(env);
         trees = Trees.instance(env);
         Context context = ((JavacProcessingEnvironment) env).getContext();
-        maker = TreeMaker.instance(context);
-        names = Names.instance(context);
+        TreeMaker maker = TreeMaker.instance(context);
+        Names names = Names.instance(context);
 
         logger = new BaseLogger(env.getMessager());
-
-        dataVisitor = new DataVisitor(new ClassTreeAdapter(logger),
-                new ClassGenerator(maker, names), logger
-        );
+        generator = new ClassGenerator(maker, names, logger);
+        adapter = new ClassTreeAdapter(logger);
     }
 
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
@@ -63,19 +55,14 @@ public class JProcessor extends AbstractProcessor {
 
         handler.handleClassAnnotation(Data.class, it -> {
             JCTree tree = (JCTree) trees.getTree(it);
-            tree.accept(dataVisitor);
+            tree.accept(new DataVisitor(adapter, generator, logger));
         });
 
         handler.handleClassAnnotation(Default.class, it -> {
-            DefaultConstructorVisitor visitor = new DefaultConstructorVisitor(processingEnv,
-                    (TypeElement) it
-            );
-            it.accept(visitor, null);
-            try {
-                visitor.generateCode();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            JCTree tree = (JCTree) trees.getTree(it);
+            tree.accept(new DefaultConstructorVisitor((JCTree.JCClassDecl) tree, adapter, generator,
+                    logger
+            ));
         });
 
         return true;

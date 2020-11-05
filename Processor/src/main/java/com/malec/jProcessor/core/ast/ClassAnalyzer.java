@@ -9,7 +9,7 @@ import com.sun.tools.javac.tree.JCTree.JCVariableDecl;
 import java.util.function.Predicate;
 
 public class ClassAnalyzer {
-    public static JCVariableDecl[] findFields(JCClassDecl source, Logger l) {
+    public static JCVariableDecl[] findFields(JCClassDecl source, Logger log) {
         JCTree[] filtered = filter(source.defs.toArray(new JCTree[0]),
                 it -> it instanceof JCVariableDecl, null
         );
@@ -20,9 +20,9 @@ public class ClassAnalyzer {
         return fields;
     }
 
-    public static JCMethodDecl[] findMethods(JCClassDecl source) {
+    public static JCMethodDecl[] findMethods(JCClassDecl source, Logger log) {
         JCTree[] filtered = filter(source.defs.toArray(new JCTree[0]),
-                it -> it instanceof JCVariableDecl, null
+                it -> it instanceof JCMethodDecl, null
         );
 
         JCMethodDecl[] methods = new JCMethodDecl[filtered.length];

@@ -19,7 +19,6 @@ public class AnnotationHandler {
         this.logger = logger;
     }
 
-
     public void handleClassAnnotation(Class<? extends Annotation> annotation, Consumer<Element> consumer) {
         Set<? extends Element> annotated = roundEnv.getElementsAnnotatedWith(annotation);
 

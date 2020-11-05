@@ -1,74 +1,38 @@
 package com.malec.jProcessor.core;
 
-import com.malec.jProcessor.Arg;
-import com.malec.jProcessor.Default;
-import com.malec.jProcessor.core.generation.DefaultConstructorGenerator;
-import com.malec.jProcessor.core.generation.PrintWriterPrinter;
-import com.malec.jProcessor.core.generation.TabbedPrinter;
+import com.malec.jProcessor.core.ast.ClassAnalyzer;
+import com.malec.jProcessor.core.ast.ClassGenerator;
+import com.malec.jProcessor.core.ast.ClassTreeAdapter;
+import com.malec.jProcessor.core.generation.Logger;
+import com.sun.tools.javac.tree.JCTree.JCClassDecl;
+import com.sun.tools.javac.tree.JCTree.JCMethodDecl;
+import com.sun.tools.javac.tree.JCTree.JCVariableDecl;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
+public class DefaultConstructorVisitor extends ClassVisitor {
+    private final JCClassDecl root;
+    private boolean constructorCreated = false;
 
-import javax.annotation.processing.Filer;
-import javax.annotation.processing.Messager;
-import javax.annotation.processing.ProcessingEnvironment;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.VariableElement;
-import javax.lang.model.util.ElementScanner7;
-import javax.tools.JavaFileObject;
-
-public class DefaultConstructorVisitor extends ElementScanner7<Void, Void> {
-    private final Messager messager;
-    private final Filer mFiler;
-
-    private final String className;
-
-    private List<String> argsNames = new ArrayList<>();
-    private List<String> argsTypes = new ArrayList<>();
-    private Arg[] optional;
-
-    public DefaultConstructorVisitor(ProcessingEnvironment env, TypeElement element) {
-        super();
-        messager = env.getMessager();
-        mFiler = env.getFiler();
-        className = element.getQualifiedName().toString();
+    public DefaultConstructorVisitor(JCClassDecl root, ClassTreeAdapter adapter, ClassGenerator generator, Logger logger) {
+        super(adapter, generator, logger);
+        this.root = root;
     }
 
     @Override
-    public Void visitVariable(VariableElement field, Void aVoid) {
-        Default byDefault = field.getEnclosingElement().getAnnotation(Default.class);
-        optional = byDefault.args();
+    public void visitClass(JCClassDecl tree) {
 
-        argsNames.add(field.getSimpleName().toString());
-        argsTypes.add(field.asType().toString());
-
-        return super.visitVariable(field, aVoid);
     }
 
-    public void generateCode() throws IOException {
-        String constructorClassName = className + "Constructor";
-        JavaFileObject constructorFile = mFiler.createSourceFile(constructorClassName);
+    @Override
+    public void visitMethodDef(JCMethodDecl tree) {
+        super.visitMethodDef(tree);
 
-        List<Argument> args = Arrays.stream(optional)
-                .map(it -> new Argument(null, it.name(), it.value())).collect(Collectors.toList());
+        JCVariableDecl[] fields = ClassAnalyzer.findFields(root, logger);
+        for (int i = 0; i < fields.length; i++)
+            fields[i] = generator.generateParameter(fields[i]);
 
-        for (Argument arg : args) {
-            int i = argsNames.indexOf(arg.name);
-            if (i >= 0) {
-                argsNames.remove(i);
-                argsTypes.remove(i);
-            }
-        }
-        for (int i = 0; i < argsNames.size(); i++)
-            args.add(new Argument(argsTypes.get(i), argsNames.get(i), null));
-
-        try (PrintWriter out = new PrintWriter(constructorFile.openWriter())) {
-            TabbedPrinter printer = new PrintWriterPrinter(out);
-            new DefaultConstructorGenerator(printer, className, args).generate();
+        if (tree.name.toString().equals("<init>") && !constructorCreated) {
+            result = generator.generateConstructor(tree, fields);
+            constructorCreated = true;
         }
     }
 }

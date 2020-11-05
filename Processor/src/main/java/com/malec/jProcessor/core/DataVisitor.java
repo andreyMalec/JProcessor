@@ -6,30 +6,17 @@ import com.malec.jProcessor.core.ast.ClassTreeAdapter;
 import com.malec.jProcessor.core.generation.Logger;
 import com.sun.tools.javac.tree.JCTree.JCClassDecl;
 import com.sun.tools.javac.tree.JCTree.JCVariableDecl;
-import com.sun.tools.javac.tree.TreeTranslator;
 
-public class DataVisitor extends TreeTranslator {
-    private final ClassTreeAdapter adapter;
-    private final ClassGenerator generator;
-    private final Logger logger;
-
+public class DataVisitor extends ClassVisitor {
     public DataVisitor(ClassTreeAdapter adapter, ClassGenerator generator, Logger logger) {
-        this.logger = logger;
-        this.adapter = adapter;
-        this.generator = generator;
+        super(adapter, generator, logger);
     }
 
     @Override
-    public void visitClassDef(JCClassDecl tree) {
-        super.visitClassDef(tree);
-
-        adapter.start(tree);
-
+    public void visitClass(JCClassDecl tree) {
         for (JCVariableDecl var : ClassAnalyzer.findFields(tree, logger)) {
             adapter.addMember(generator.generateSetter(var));
             adapter.addMember(generator.generateGetter(var));
         }
-
-        result = adapter.commit();
     }
 }
