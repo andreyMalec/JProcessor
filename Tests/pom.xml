@@ -5,7 +5,7 @@
     <artifactId>Tests</artifactId>
     <dependencies>
         <dependency>
-            <artifactId>Processor</artifactId>
+            <artifactId>jProcessor-compiler</artifactId>
             <groupId>com.malec</groupId>
             <version>${parent.version}</version>
         </dependency>
@@ -15,6 +15,6 @@
     <parent>
         <artifactId>JProcessor</artifactId>
         <groupId>com.malec</groupId>
-        <version>0.8-NONWORKING</version>
+        <version>1.3</version>
     </parent>
 </project>
