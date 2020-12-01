@@ -1,6 +1,8 @@
 package jProcessor.core.generation;
 
 import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.CodeBlock;
+import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
@@ -12,6 +14,7 @@ import java.util.List;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.RoundEnvironment;
 import javax.inject.Provider;
+import javax.inject.Singleton;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
@@ -52,14 +55,46 @@ public class ModuleGenerator extends BaseGenerator<ModuleData> {
         return new ModuleData(moduleType.toString(), packageName, moduleType, providerDataList);
     }
 
-    private MethodSpec addGetMethod(String providerName, TypeName providerType, List<? extends VariableElement> params) {
+    private MethodSpec addGetMethod(String providerName, TypeName providerType, List<? extends VariableElement> params, boolean isLazy) {
         MethodSpec.Builder builder = MethodSpec.methodBuilder(GET).addModifiers(Modifier.PUBLIC)
                 .addAnnotation(Override.class).returns(providerType);
 
         StringBuilder sb = new StringBuilder();
-        sb.append("return $L($L");
+        if (isLazy) {
+            sb.append("$L = ");
+            appendProviderGet(sb, params.size());
 
-        for (int i = 0; i < params.size(); i++) {
+            Object[] values = new Object[params.size() + 3];
+            values[0] = fieldName(providerType);
+            values[1] = providerName;
+            values[2] = MODULE;
+            System.arraycopy(params.toArray(), 0, values, 3, params.size());
+
+            builder.addCode(
+                    CodeBlock.builder().beginControlFlow("if ($L == null)", fieldName(providerType))
+                            .addStatement(sb.toString(), values).endControlFlow().build());
+
+            builder.addStatement("return $L", fieldName(providerType));
+        } else {
+            sb.append("return ");
+            appendProviderGet(sb, params.size());
+
+            Object[] values = new Object[params.size() + 2];
+            values[0] = providerName;
+            values[1] = MODULE;
+            System.arraycopy(params.toArray(), 0, values, 2, params.size());
+
+            builder.addStatement(sb.toString(), values);
+        }
+
+        MethodSpec generated = builder.build();
+        log.note("addGetMethod: ", generated);
+        return generated;
+    }
+
+    private void appendProviderGet(StringBuilder sb, int paramsCount) {
+        sb.append("$L($L");
+        for (int i = 0; i < paramsCount; i++) {
             if (i == 0)
                 sb.append(", ");
             sb.append("$L");
@@ -67,21 +102,10 @@ public class ModuleGenerator extends BaseGenerator<ModuleData> {
             sb.append(".");
             sb.append(GET);
             sb.append("()");
-            if (i + 1 < params.size())
+            if (i + 1 < paramsCount)
                 sb.append(", ");
         }
-
         sb.append(")");
-
-        Object[] values = new Object[params.size() + 2];
-        values[0] = providerName;
-        values[1] = MODULE;
-        System.arraycopy(params.toArray(), 0, values, 2, params.size());
-
-        builder.addStatement(sb.toString(), values);
-        MethodSpec generated = builder.build();
-        log.note("addGetMethod: ", generated);
-        return generated;
     }
 
     private MethodSpec addProvideMethod(String providerName, TypeName providerType, List<? extends VariableElement> params) {
@@ -142,6 +166,14 @@ public class ModuleGenerator extends BaseGenerator<ModuleData> {
         builder.addModifiers(Modifier.PUBLIC);
         builder.addField(moduleType, MODULE, Modifier.PRIVATE, Modifier.FINAL);
 
+        boolean isLazy = provider.getAnnotation(Singleton.class) != null;
+        if (isLazy) {
+            builder.addField(FieldSpec
+                    .builder(providerType, fieldName(providerType), Modifier.PRIVATE,
+                            Modifier.STATIC
+                    ).build());
+        }
+
         for (VariableElement param : params)
             builder.addField(
                     ParameterizedTypeName.get(ClassName.get(Provider.class), name(param.asType())),
@@ -152,7 +184,7 @@ public class ModuleGenerator extends BaseGenerator<ModuleData> {
                 ParameterizedTypeName.get(ClassName.get(Provider.class), providerType));
 
         builder.addMethod(addConstructor(params));
-        builder.addMethod(addGetMethod(providerName, providerType, params));
+        builder.addMethod(addGetMethod(providerName, providerType, params, isLazy));
         builder.addMethod(addProvideMethod(providerName, providerType, params));
 
         TypeSpec generated = builder.build();

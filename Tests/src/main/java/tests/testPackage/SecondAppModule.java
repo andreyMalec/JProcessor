@@ -1,5 +1,7 @@
 package tests.testPackage;
 
+import javax.inject.Singleton;
+
 import jProcessor.Module;
 import jProcessor.Provides;
 import tests.B;
@@ -10,6 +12,7 @@ import tests.D;
 @Module
 public class SecondAppModule {
     @Provides
+    @Singleton
     public Cat provideCat() {
         return new Cat(2.3, 5, "Vasya");
     }
