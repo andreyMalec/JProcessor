@@ -7,32 +7,49 @@ import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.RoundEnvironment;
 import javax.inject.Provider;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
+import javax.lang.model.type.TypeMirror;
 
+import jProcessor.core.ProviderNotFoundException;
 import jProcessor.core.data.InjectorData;
+import jProcessor.core.data.ModuleData;
 import jProcessor.core.data.ProviderData;
 import jProcessor.util.Logger;
 
-import static jProcessor.util.Ext.filter;
+import static jProcessor.util.Ext.checkProvider;
+import static jProcessor.util.Ext.firstOrNull;
 import static jProcessor.util.Ext.map;
 
 public class InjectorGenerator extends BaseGenerator<Void> {
     private final InjectorData injectorData;
+    private final List<ProviderData> providers = new ArrayList<>();
+    private final Set<String> providersNames = new HashSet<>();
+    private final String packageName;
 
     public InjectorGenerator(Logger log, Filer filer, RoundEnvironment roundEnv, InjectorData injectorData) {
         super(log, filer, roundEnv);
         this.injectorData = injectorData;
+        Set<ProviderData> set = new HashSet<>();
+        injectorData.modulesData.forEach(it -> set.addAll(it.providers));
+        providers.addAll(set);
+        providers.sort((Comparator.comparingInt(o -> o.params.size())));
+        packageName = getPackage(injectorData.modulesData.get(0).packageName);
     }
 
     @Override
     public Void generate() {
-        createFile(createInjector(), injectorData.moduleData.packageName);
+        createFile(createInjector(), packageName);
         return null;
     }
 
@@ -41,10 +58,11 @@ public class InjectorGenerator extends BaseGenerator<Void> {
                 .addParameter(targetType, INSTANCE).returns(void.class);
 
         for (Element field : fields) {
-            ProviderData provider = filter(injectorData.moduleData.providers,
-                    it -> it.returnType.equals(field.asType())
-            ).get(0);
-            String returnType = simpleName(name(provider.returnType));
+            TypeMirror providerType = checkProvider(
+                    firstOrNull(providers, it -> it.returnType.equals(field.asType())),
+                    field.asType()
+            ).returnType;
+            String returnType = simpleName(name(providerType));
             String paramName = Character.toLowerCase(returnType.charAt(0)) + returnType
                     .substring(1) + PROVIDER;
             builder.addStatement(INSTANCE + ".$L = $L." + GET + "()", field.getSimpleName(),
@@ -60,16 +78,15 @@ public class InjectorGenerator extends BaseGenerator<Void> {
     private MethodSpec addConstructor() {
         MethodSpec.Builder builder = MethodSpec.constructorBuilder().addModifiers(Modifier.PRIVATE);
 
-        builder.addStatement("$L module = new $L()", injectorData.moduleData.type,
-                injectorData.moduleData.type
-        );
+        for (ModuleData moduleData : injectorData.modulesData)
+            builder.addStatement("$L $L = new $L()", moduleData.type, providerName(moduleData.type),
+                    moduleData.type
+            );
 
-        for (ProviderData provider : injectorData.moduleData.providers) {
+        for (ProviderData provider : providers) {
             StringBuilder sb = new StringBuilder();
-            sb.append("this.$L = new $L(module");
-            String returnType = simpleName(name(provider.returnType));
-            String paramName = Character.toLowerCase(returnType.charAt(0)) + returnType
-                    .substring(1) + PROVIDER;
+            sb.append("this.$L = new $L.$L($L");
+            String providerName = providerName(provider.returnType);
 
             for (int i = 0; i < provider.params.size(); i++) {
                 if (i == 0)
@@ -79,12 +96,27 @@ public class InjectorGenerator extends BaseGenerator<Void> {
                     sb.append(", ");
             }
 
-            Object[] fs = map(provider.params, it -> it.getSimpleName().toString() + PROVIDER)
+            Object[] params = map(provider.params, it -> it.getSimpleName().toString() + PROVIDER)
                     .toArray();
-            Object[] values = new Object[provider.params.size() + 2];
-            values[0] = paramName;
-            values[1] = provider.factory;
-            System.arraycopy(fs, 0, values, 2, fs.length);
+            for (Object p : params) {
+                String param = (String) p;
+                if (!providersNames.contains(param))
+                    throw new ProviderNotFoundException(
+                            Character.toUpperCase(param.charAt(0)) + param.substring(1)
+                                    .replace(PROVIDER, ""));
+            }
+            ModuleData module = Objects.requireNonNull(firstOrNull(injectorData.modulesData,
+                    it -> simpleName(it.type).equals(provider.factory.split("_")[0])
+            ));
+            TypeName moduleType = module.type;
+
+            Object[] values = new Object[provider.params.size() + 4];
+            values[0] = providerName;
+            values[1] = module.packageName;
+            values[2] = provider.factory;
+            values[3] = providerName(moduleType);
+
+            System.arraycopy(params, 0, values, 4, params.length);
 
             sb.append(")");
             builder.addStatement(sb.toString(), values);
@@ -98,7 +130,7 @@ public class InjectorGenerator extends BaseGenerator<Void> {
     private MethodSpec addGetMethod() {
         MethodSpec.Builder builder = MethodSpec.methodBuilder(GET)
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                .returns(ClassName.get(injectorData.moduleData.packageName, INJECTOR));
+                .returns(ClassName.get(packageName, INJECTOR));
 
         builder.addStatement("return $L", "injector");
 
@@ -111,19 +143,17 @@ public class InjectorGenerator extends BaseGenerator<Void> {
         TypeSpec.Builder builder = TypeSpec.classBuilder(INJECTOR)
                 .addModifiers(Modifier.PUBLIC, Modifier.FINAL);
 
-        for (ProviderData provider : injectorData.moduleData.providers) {
+        for (ProviderData provider : providers) {
             TypeName returnType = name(provider.returnType);
-            String simpleReturnType = simpleName(name(provider.returnType));
-            String providerName = Character
-                    .toLowerCase(simpleReturnType.charAt(0)) + simpleReturnType
-                    .substring(1) + PROVIDER;
+            String providerName = providerName(returnType);
             builder.addField(ParameterizedTypeName.get(ClassName.get(Provider.class), returnType),
                     providerName, Modifier.PRIVATE
             );
+            providersNames.add(providerName);
         }
 
         builder.addField(FieldSpec
-                .builder(ClassName.get(injectorData.moduleData.packageName, INJECTOR), "injector", Modifier.PRIVATE,
+                .builder(ClassName.get(packageName, INJECTOR), "injector", Modifier.PRIVATE,
                         Modifier.FINAL, Modifier.STATIC
                 ).initializer("new $L()", INJECTOR).build());
 

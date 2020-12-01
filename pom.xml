@@ -29,7 +29,7 @@
     <groupId>com.malec</groupId>
     <modelVersion>4.0.0</modelVersion>
     <modules>
-        <module>Processor</module>
+        <module>Compiler</module>
         <module>Tests</module>
     </modules>
     <packaging>pom</packaging>
@@ -39,5 +39,5 @@
         <parent.version>${project.version}</parent.version>
     </properties>
 
-    <version>1.0</version>
+    <version>1.1</version>
 </project>

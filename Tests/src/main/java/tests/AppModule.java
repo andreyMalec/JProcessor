@@ -6,12 +6,12 @@ import jProcessor.Provides;
 @Module
 public class AppModule {
     @Provides
-    public Cat provideCat() {
-        return new Cat(2.3, 5, "Vasya");
+    public Dependency dependency(Cat cat) {
+        return new Dependency(cat);
     }
 
     @Provides
-    public Dependency dependency(Cat cat) {
-        return new Dependency(cat);
+    public C c(B b) {
+        return new C(b);
     }
 }

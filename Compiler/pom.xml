@@ -2,7 +2,7 @@
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns="http://maven.apache.org/POM/4.0.0"
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <artifactId>Processor</artifactId>
+    <artifactId>jProcessor-compiler</artifactId>
     <build>
         <plugins>
             <plugin>
@@ -55,16 +55,16 @@
     </dependencies>
     <modelVersion>4.0.0</modelVersion>
 
-    <name>Processor</name>
-
-    <parent>
-        <artifactId>JProcessor</artifactId>
-        <groupId>com.malec</groupId>
-        <version>1.0</version>
-    </parent>
+    <name>Compiler</name>
     <properties>
         <autoService.version>1.0-rc7</autoService.version>
         <javapoet.version>1.13.0</javapoet.version>
         <javax.version>1</javax.version>
     </properties>
+
+    <parent>
+        <artifactId>JProcessor</artifactId>
+        <groupId>com.malec</groupId>
+        <version>1.1</version>
+    </parent>
 </project>

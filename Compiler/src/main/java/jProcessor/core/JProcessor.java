@@ -51,22 +51,22 @@ public class JProcessor extends AbstractProcessor {
 
         AnnotationHandler handler = new AnnotationHandler(roundEnv, log);
 
-        Map<Element, List<Element>> inject = new HashMap<>();
+        Map<Element, List<Element>> injections = new HashMap<>();
         handler.handleAnnotation(Inject.class, it -> {
             Element target = it.getEnclosingElement();
             if (it.getKind() == ElementKind.FIELD)
-                if (inject.containsKey(target))
-                    inject.get(target).add(it);
+                if (injections.containsKey(target))
+                    injections.get(target).add(it);
                 else {
                     List<Element> fields = new ArrayList<>();
                     fields.add(it);
-                    inject.put(target, fields);
+                    injections.put(target, fields);
                 }
         });
 
         List<TypeMirror> types = new ArrayList<>();
         List<List<Element>> fields = new ArrayList<>();
-        inject.forEach((key, value) -> {
+        injections.forEach((key, value) -> {
             types.add(key.asType());
             fields.add(value);
         });
@@ -77,7 +77,7 @@ public class JProcessor extends AbstractProcessor {
             data.add(generator.generate());
         });
 
-        InjectorData injectorData = new InjectorData(data.get(0), types, fields);
+        InjectorData injectorData = new InjectorData(data, types, fields);
 
         new InjectorGenerator(log, filer, roundEnv, injectorData).generate();
 

@@ -8,7 +8,6 @@ import com.squareup.javapoet.TypeSpec;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.RoundEnvironment;
@@ -18,40 +17,39 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.VariableElement;
-import javax.lang.model.type.TypeKind;
 
-import jProcessor.Provides;
+import jProcessor.core.ProviderVisitor;
 import jProcessor.core.data.ModuleData;
 import jProcessor.core.data.ProviderData;
 import jProcessor.util.Logger;
 
-import static jProcessor.util.Ext.map;
-import static jProcessor.util.Ext.toList;
-
 public class ModuleGenerator extends BaseGenerator<ModuleData> {
     private final TypeName moduleType;
     private final String packageName;
-    private final List<ProviderData> providers = new ArrayList<>();
+    private final List<ExecutableElement> providers;
 
     public ModuleGenerator(Logger log, Filer filer, RoundEnvironment roundEnv, Element module) {
         super(log, filer, roundEnv);
-        this.moduleType = name(module.asType());
+        moduleType = name(module.asType());
         Element e = module.getEnclosingElement();
         while (e.getKind() != ElementKind.PACKAGE)
             e = e.getEnclosingElement();
-        packageName = e.toString();
+        packageName = e.toString() + "." + fieldName(moduleType);
+        providers = findProviders(module);
     }
 
     @Override
     public ModuleData generate() {
-        for (ExecutableElement provider : findProviders(roundEnv)) {
+        List<ProviderData> providerDataList = new ArrayList<>();
+        for (ExecutableElement provider : providers) {
             TypeSpec p = createProvider(provider, provider.getParameters());
             createFile(p, packageName);
-            providers.add(new ProviderData(provider.getSimpleName(), provider.getReturnType(),
-                    provider.getParameters(), p.name
-            ));
+            providerDataList
+                    .add(new ProviderData(provider.getSimpleName(), provider.getReturnType(),
+                            provider.getParameters(), p.name
+                    ));
         }
-        return new ModuleData(moduleType.toString(), packageName, moduleType, providers);
+        return new ModuleData(moduleType.toString(), packageName, moduleType, providerDataList);
     }
 
     private MethodSpec addGetMethod(String providerName, TypeName providerType, List<? extends VariableElement> params) {
@@ -162,9 +160,10 @@ public class ModuleGenerator extends BaseGenerator<ModuleData> {
         return generated;
     }
 
-    private List<ExecutableElement> findProviders(RoundEnvironment roundEnv) {
-        Set<? extends Element> annotated = roundEnv.getElementsAnnotatedWith(Provides.class);
+    private List<ExecutableElement> findProviders(Element module) {
+        ProviderVisitor v = new ProviderVisitor();
+        module.accept(v, null);
 
-        return map(toList(annotated), it -> (ExecutableElement) it);
+        return v.providers();
     }
 }
