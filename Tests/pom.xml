@@ -15,6 +15,6 @@
     <parent>
         <artifactId>JProcessor</artifactId>
         <groupId>com.malec</groupId>
-        <version>0.8-NONWORKING</version>
+        <version>1.0</version>
     </parent>
 </project>

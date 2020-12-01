@@ -36,8 +36,8 @@
 
     <properties>
         <junit.version>4.13.1</junit.version>
-        <parent.version>${version}</parent.version>
+        <parent.version>${project.version}</parent.version>
     </properties>
 
-    <version>0.8-NONWORKING</version>
+    <version>1.0</version>
 </project>

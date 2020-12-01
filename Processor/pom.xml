@@ -8,6 +8,13 @@
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <artifactId>auto-service</artifactId>
+                            <groupId>com.google.auto.service</groupId>
+                            <version>${autoService.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
                     <source>1.8</source>
                     <target>1.8</target>
                 </configuration>
@@ -23,6 +30,11 @@
             <version>${autoService.version}</version>
         </dependency>
         <dependency>
+            <artifactId>javapoet</artifactId>
+            <groupId>com.squareup</groupId>
+            <version>${javapoet.version}</version>
+        </dependency>
+        <dependency>
             <artifactId>tools</artifactId>
             <groupId>com.sun</groupId>
             <scope>system</scope>
@@ -35,6 +47,11 @@
             <scope>test</scope>
             <version>0.19</version>
         </dependency>
+        <dependency>
+            <artifactId>javax.inject</artifactId>
+            <groupId>javax.inject</groupId>
+            <version>${javax.version}</version>
+        </dependency>
     </dependencies>
     <modelVersion>4.0.0</modelVersion>
 
@@ -43,9 +60,11 @@
     <parent>
         <artifactId>JProcessor</artifactId>
         <groupId>com.malec</groupId>
-        <version>0.8-NONWORKING</version>
+        <version>1.0</version>
     </parent>
     <properties>
         <autoService.version>1.0-rc7</autoService.version>
+        <javapoet.version>1.13.0</javapoet.version>
+        <javax.version>1</javax.version>
     </properties>
 </project>
