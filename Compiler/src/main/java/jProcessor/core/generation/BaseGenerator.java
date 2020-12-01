@@ -22,9 +22,7 @@ public abstract class BaseGenerator<T> {
     protected final String INSTANCE = "instance";
     protected final String MODULE = "module";
     protected final String INJECT = "inject";
-    protected final String INJECT_MEMBERS = "injectMembers";
     protected final String INJECTOR = "Injector";
-    protected final String MEMBERS_INJECTOR = "MembersInjector";
 
     public BaseGenerator(Logger log, Filer filer, RoundEnvironment roundEnv) {
         this.log = log;
@@ -52,9 +50,25 @@ public abstract class BaseGenerator<T> {
     }
 
     protected String simpleName(TypeName type) {
-        String[] a = type.toString().split("\\.");
+        String typeS = type.toString();
+
+        return simpleName(typeS);
+    }
+
+    protected String simpleName(String type) {
+        if (type.contains("<")) {
+            int first = type.indexOf("<");
+            int last = type.lastIndexOf(">");
+            String typeName = type.substring(0, first);
+            String paramName = type.substring(first + 1, last);
+            typeName = simpleName(typeName);
+            paramName = simpleName(paramName);
+            return typeName + paramName;
+        }
+
+        String[] a = type.split("\\.");
         if (a.length == 0)
-            return type.toString();
+            return type;
         else
             return a[a.length - 1];
     }

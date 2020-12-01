@@ -58,10 +58,9 @@ public class InjectorGenerator extends BaseGenerator<Void> {
                 .addParameter(targetType, INSTANCE).returns(void.class);
 
         for (Element field : fields) {
-            TypeMirror providerType = checkProvider(
-                    firstOrNull(providers, it -> it.returnType.equals(field.asType())),
-                    field.asType()
-            ).returnType;
+            TypeMirror providerType = checkProvider(firstOrNull(providers,
+                    it -> it.returnType.toString().equals(field.asType().toString())
+            ), field.asType()).returnType;
             String returnType = simpleName(name(providerType));
             String paramName = Character.toLowerCase(returnType.charAt(0)) + returnType
                     .substring(1) + PROVIDER;

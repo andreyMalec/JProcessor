@@ -1,5 +1,10 @@
 package tests.testPackage;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import javax.inject.Singleton;
 
 import jProcessor.Module;
@@ -11,10 +16,32 @@ import tests.D;
 
 @Module
 public class SecondAppModule {
+    private static final Cat cat = new Cat(2.3, 5, "Vasya");
+
     @Provides
     @Singleton
     public Cat provideCat() {
-        return new Cat(2.3, 5, "Vasya");
+        return cat;
+    }
+
+    @Provides
+    @Singleton
+    public List<List<Cat>> provideCats() {
+        List<Cat> cats = new ArrayList<>();
+        List<List<Cat>> cats2 = new ArrayList<>();
+        cats.add(cat);
+        cats2.add(cats);
+        return cats2;
+    }
+
+    @Provides
+    @Singleton
+    public List<Set<Cat>> provideCatsSet() {
+        Set<Cat> cats = new HashSet<>();
+        List<Set<Cat>> cats2 = new ArrayList<>();
+        cats.add(cat);
+        cats2.add(cats);
+        return cats2;
     }
 
     @Provides

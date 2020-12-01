@@ -12,6 +12,6 @@ public class TestJProcessor {
     public void testProvides() {
         DependencyConsumer dc = new DependencyConsumer();
         A a = new A();
-        assertEquals(dc.dependency.cat, a.cat);
+        assertEquals(dc.dependency.cat, a.cats.get(0).get(0));
     }
 }

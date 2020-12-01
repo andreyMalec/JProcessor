@@ -1,5 +1,8 @@
 package tests;
 
+import java.util.List;
+import java.util.Set;
+
 import javax.inject.Inject;
 
 public class A {
@@ -7,7 +10,10 @@ public class A {
     public D d;
 
     @Inject
-    public Cat cat;
+    public List<List<Cat>> cats;
+
+    @Inject
+    public List<Set<Cat>> catsSet;
 
     public A() {
         Injector.get().inject(this);
