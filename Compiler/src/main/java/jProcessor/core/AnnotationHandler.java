@@ -21,10 +21,7 @@ public class AnnotationHandler {
     public void handleAnnotation(Class<? extends Annotation> annotation, Consumer<Element> consumer) {
         Set<? extends Element> annotated = roundEnv.getElementsAnnotatedWith(annotation);
 
-        for (Element element : annotated) {
-            logger.note("Working on " + element.asType().toString() + "...");
-
+        for (Element element : annotated)
             consumer.accept(element);
-        }
     }
 }

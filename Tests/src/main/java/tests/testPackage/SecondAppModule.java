@@ -45,8 +45,8 @@ public class SecondAppModule {
     }
 
     @Provides
-    public D d(B b, C c) {
-        return new D(b, c);
+    public D d(B bob, C c) {
+        return new D(bob, c);
     }
 
     @Provides

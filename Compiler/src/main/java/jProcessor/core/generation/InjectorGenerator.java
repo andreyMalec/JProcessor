@@ -34,7 +34,7 @@ import static jProcessor.util.Ext.map;
 public class InjectorGenerator extends BaseGenerator<Void> {
     private final InjectorData injectorData;
     private final List<ProviderData> providers = new ArrayList<>();
-    private final Set<String> providersNames = new HashSet<>();
+    private final Set<String> providersTypes = new HashSet<>();
     private final String packageName;
 
     public InjectorGenerator(Logger log, Filer filer, RoundEnvironment roundEnv, InjectorData injectorData) {
@@ -70,7 +70,7 @@ public class InjectorGenerator extends BaseGenerator<Void> {
         }
 
         MethodSpec generated = builder.build();
-        log.note("addInjectMethod: ", generated);
+        //        log.note("addInjectMethod: ", generated);
         return generated;
     }
 
@@ -95,14 +95,13 @@ public class InjectorGenerator extends BaseGenerator<Void> {
                     sb.append(", ");
             }
 
-            Object[] params = map(provider.params, it -> it.getSimpleName().toString() + PROVIDER)
-                    .toArray();
-            for (Object p : params) {
+            Object[] params = map(provider.params, it -> providerName(it.asType())).toArray();
+            Object[] paramsTypes = map(provider.params, it -> simpleName(it.asType())).toArray();
+            for (Object p : paramsTypes) {
                 String param = (String) p;
-                if (!providersNames.contains(param))
-                    throw new ProviderNotFoundException(
-                            Character.toUpperCase(param.charAt(0)) + param.substring(1)
-                                    .replace(PROVIDER, ""));
+                if (!providersTypes.contains(param)) {
+                    throw new ProviderNotFoundException(param);
+                }
             }
             ModuleData module = Objects.requireNonNull(firstOrNull(injectorData.modulesData,
                     it -> simpleName(it.type).equals(provider.factory.split("_")[0])
@@ -122,7 +121,7 @@ public class InjectorGenerator extends BaseGenerator<Void> {
         }
 
         MethodSpec generated = builder.build();
-        log.note("addConstructor: ", generated);
+        //        log.note("addConstructor: ", generated);
         return generated;
     }
 
@@ -134,7 +133,7 @@ public class InjectorGenerator extends BaseGenerator<Void> {
         builder.addStatement("return $L", "injector");
 
         MethodSpec generated = builder.build();
-        log.note("addGetMethod: ", generated);
+        //        log.note("addGetMethod: ", generated);
         return generated;
     }
 
@@ -148,7 +147,7 @@ public class InjectorGenerator extends BaseGenerator<Void> {
             builder.addField(ParameterizedTypeName.get(ClassName.get(Provider.class), returnType),
                     providerName, Modifier.PRIVATE
             );
-            providersNames.add(providerName);
+            providersTypes.add(simpleName(returnType));
         }
 
         builder.addField(FieldSpec
@@ -166,7 +165,7 @@ public class InjectorGenerator extends BaseGenerator<Void> {
         builder.addMethod(addGetMethod());
 
         TypeSpec generated = builder.build();
-        log.note("createProvider: ", generated);
+        //        log.note("createInjector: ", generated);
         return generated;
     }
 }

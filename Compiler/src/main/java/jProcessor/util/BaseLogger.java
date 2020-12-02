@@ -1,5 +1,8 @@
 package jProcessor.util;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
 import javax.annotation.processing.Messager;
 import javax.tools.Diagnostic;
 
@@ -20,9 +23,16 @@ public class BaseLogger implements Logger {
 
     @Override
     public void error(Object... text) {
-        StringBuilder sb = new StringBuilder();
-        for (Object obj : text)
-            sb.append(obj.toString());
-        log.printMessage(Diagnostic.Kind.ERROR, sb.toString());
+        if (text.length == 1 && text[0] instanceof RuntimeException) {
+            RuntimeException t = (RuntimeException) text[0];
+            StringWriter stackTraceWriter = new StringWriter();
+            t.printStackTrace(new PrintWriter(stackTraceWriter));
+            log.printMessage(Diagnostic.Kind.ERROR, stackTraceWriter.toString());
+        } else {
+            StringBuilder sb = new StringBuilder();
+            for (Object obj : text)
+                sb.append(obj.toString());
+            log.printMessage(Diagnostic.Kind.ERROR, sb.toString());
+        }
     }
 }

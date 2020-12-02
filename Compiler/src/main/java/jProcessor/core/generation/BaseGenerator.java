@@ -55,6 +55,10 @@ public abstract class BaseGenerator<T> {
         return simpleName(typeS);
     }
 
+    protected String simpleName(TypeMirror type) {
+        return simpleName(name(type));
+    }
+
     protected String simpleName(String type) {
         if (type.contains("<")) {
             int first = type.indexOf("<");
@@ -74,7 +78,11 @@ public abstract class BaseGenerator<T> {
     }
 
     protected TypeName name(TypeMirror type) {
-        return TypeName.get(type);
+        TypeName name = TypeName.get(type);
+        if (name.isPrimitive())
+            return name.box();
+        else
+            return TypeName.get(type);
     }
 
     protected void createFile(TypeSpec module, String packageName) {

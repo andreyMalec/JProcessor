@@ -88,7 +88,7 @@ public class ModuleGenerator extends BaseGenerator<ModuleData> {
         }
 
         MethodSpec generated = builder.build();
-        log.note("addGetMethod: ", generated);
+        //        log.note("addGetMethod: ", generated);
         return generated;
     }
 
@@ -134,7 +134,7 @@ public class ModuleGenerator extends BaseGenerator<ModuleData> {
 
         builder.addStatement(sb.toString(), values);
         MethodSpec generated = builder.build();
-        log.note("addProvideMethod: ", generated);
+        //        log.note("addProvideMethod: ", generated);
         return generated;
     }
 
@@ -152,7 +152,7 @@ public class ModuleGenerator extends BaseGenerator<ModuleData> {
         }
 
         MethodSpec generated = builder.build();
-        log.note("addConstructor: ", generated);
+        //        log.note("addConstructor: ", generated);
         return generated;
     }
 
@@ -188,7 +188,7 @@ public class ModuleGenerator extends BaseGenerator<ModuleData> {
         builder.addMethod(addProvideMethod(providerName, providerType, params));
 
         TypeSpec generated = builder.build();
-        log.note("createProvider: ", generated);
+        //        log.note("createProvider: ", generated);
         return generated;
     }
 

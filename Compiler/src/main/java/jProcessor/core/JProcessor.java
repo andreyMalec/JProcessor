@@ -49,37 +49,43 @@ public class JProcessor extends AbstractProcessor {
         if (annotations.isEmpty())
             return false;
 
-        AnnotationHandler handler = new AnnotationHandler(roundEnv, log);
+        try {
+            AnnotationHandler handler = new AnnotationHandler(roundEnv, log);
 
-        Map<Element, List<Element>> injections = new HashMap<>();
-        handler.handleAnnotation(Inject.class, it -> {
-            Element target = it.getEnclosingElement();
-            if (it.getKind() == ElementKind.FIELD)
-                if (injections.containsKey(target))
-                    injections.get(target).add(it);
-                else {
-                    List<Element> fields = new ArrayList<>();
-                    fields.add(it);
-                    injections.put(target, fields);
-                }
-        });
+            Map<Element, List<Element>> injections = new HashMap<>();
+            handler.handleAnnotation(Inject.class, it -> {
+                Element target = it.getEnclosingElement();
+                if (it.getKind() == ElementKind.FIELD)
+                    if (injections.containsKey(target))
+                        injections.get(target).add(it);
+                    else {
+                        List<Element> fields = new ArrayList<>();
+                        fields.add(it);
+                        injections.put(target, fields);
+                    }
+            });
 
-        List<TypeMirror> types = new ArrayList<>();
-        List<List<Element>> fields = new ArrayList<>();
-        injections.forEach((key, value) -> {
-            types.add(key.asType());
-            fields.add(value);
-        });
+            List<TypeMirror> types = new ArrayList<>();
+            List<List<Element>> fields = new ArrayList<>();
+            injections.forEach((key, value) -> {
+                types.add(key.asType());
+                fields.add(value);
+            });
 
-        List<ModuleData> data = new ArrayList<>();
-        handler.handleAnnotation(Module.class, it -> {
-            ModuleGenerator generator = new ModuleGenerator(log, filer, roundEnv, it);
-            data.add(generator.generate());
-        });
+            List<ModuleData> data = new ArrayList<>();
+            handler.handleAnnotation(Module.class, it -> {
+                ModuleGenerator generator = new ModuleGenerator(log, filer, roundEnv, it);
+                data.add(generator.generate());
+            });
 
-        InjectorData injectorData = new InjectorData(data, types, fields);
+            InjectorData injectorData = new InjectorData(data, types, fields);
 
-        new InjectorGenerator(log, filer, roundEnv, injectorData).generate();
+            new InjectorGenerator(log, filer, roundEnv, injectorData).generate();
+        } catch (RuntimeException e) {
+            RuntimeException t = new RuntimeException(e);
+            log.error(t);
+            throw t;
+        }
 
         return true;
     }
