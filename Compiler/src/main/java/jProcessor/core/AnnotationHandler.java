@@ -11,7 +11,7 @@ import jProcessor.util.Logger;
 
 public class AnnotationHandler {
     private final RoundEnvironment roundEnv;
-    private Logger logger;
+    private final Logger logger;
 
     public AnnotationHandler(RoundEnvironment roundEnv, Logger logger) {
         this.roundEnv = roundEnv;

@@ -1,6 +1,8 @@
 package jProcessor.core;
 
 import com.google.auto.service.AutoService;
+import com.google.common.collect.ImmutableList;
+import com.squareup.javapoet.TypeName;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,11 +22,12 @@ import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.TypeMirror;
 
 import jProcessor.Module;
-import jProcessor.core.data.InjectorData;
+import jProcessor.core.data.BindingRequest;
+import jProcessor.core.data.Injection;
 import jProcessor.core.data.ModuleData;
+import jProcessor.core.data.Parameter;
 import jProcessor.core.generation.InjectorGenerator;
 import jProcessor.core.generation.ModuleGenerator;
 import jProcessor.util.BaseLogger;
@@ -33,7 +36,7 @@ import jProcessor.util.Logger;
 @AutoService(Processor.class)
 @SupportedAnnotationTypes({"jProcessor.Module", "jProcessor.Provides"})
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
-public class JProcessor extends AbstractProcessor {
+public class JProcessor extends AbstractProcessor implements NameManager {
     private Logger log;
     private Filer filer;
 
@@ -52,25 +55,25 @@ public class JProcessor extends AbstractProcessor {
         try {
             AnnotationHandler handler = new AnnotationHandler(roundEnv, log);
 
-            Map<Element, List<Element>> injections = new HashMap<>();
+            Map<TypeName, List<Parameter>> requests = new HashMap<>();
             handler.handleAnnotation(Inject.class, it -> {
                 Element target = it.getEnclosingElement();
-                if (it.getKind() == ElementKind.FIELD)
-                    if (injections.containsKey(target))
-                        injections.get(target).add(it);
+                if (it.getKind() == ElementKind.FIELD) {
+                    TypeName targetType = name(target.asType());
+                    Parameter field = new Parameter(it.getSimpleName().toString(), name(it.asType()));
+                    if (requests.containsKey(targetType))
+                        requests.get(targetType).add(field);
                     else {
-                        List<Element> fields = new ArrayList<>();
-                        fields.add(it);
-                        injections.put(target, fields);
+                        List<Parameter> fields = new ArrayList<>();
+                        fields.add(field);
+                        requests.put(targetType, fields);
                     }
+                }
             });
 
-            List<TypeMirror> types = new ArrayList<>();
-            List<List<Element>> fields = new ArrayList<>();
-            injections.forEach((key, value) -> {
-                types.add(key.asType());
-                fields.add(value);
-            });
+            List<BindingRequest> bindingRequests = new ArrayList<>();
+            requests.forEach((key, value) -> bindingRequests
+                    .add(new BindingRequest(key, ImmutableList.copyOf(value))));
 
             List<ModuleData> data = new ArrayList<>();
             handler.handleAnnotation(Module.class, it -> {
@@ -78,9 +81,11 @@ public class JProcessor extends AbstractProcessor {
                 data.add(generator.generate());
             });
 
-            InjectorData injectorData = new InjectorData(data, types, fields);
+            Injection injection = new Injection(ImmutableList.copyOf(data),
+                    ImmutableList.copyOf(bindingRequests)
+            );
 
-            new InjectorGenerator(log, filer, roundEnv, injectorData).generate();
+            new InjectorGenerator(log, filer, roundEnv, injection).generate();
         } catch (RuntimeException e) {
             RuntimeException t = new RuntimeException(e);
             log.error(t);
