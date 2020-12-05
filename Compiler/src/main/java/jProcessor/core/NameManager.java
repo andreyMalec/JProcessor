@@ -1,7 +1,10 @@
 package jProcessor.core;
 
+import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 
+import javax.inject.Provider;
 import javax.lang.model.type.TypeMirror;
 
 public interface NameManager {
@@ -27,6 +30,14 @@ public interface NameManager {
     default String fieldName(String name) {
         String simpleName = simpleName(name);
         return Character.toLowerCase(simpleName.charAt(0)) + simpleName.substring(1);
+    }
+
+    default ParameterizedTypeName provider(TypeMirror type) {
+        return provider(name(type));
+    }
+
+    default ParameterizedTypeName provider(TypeName type) {
+        return ParameterizedTypeName.get(ClassName.get(Provider.class), type);
     }
 
     default String providerName(TypeName name) {

@@ -14,7 +14,6 @@ public class AppModule {
     }
 
     @Provides
-    @Singleton
     public C c(B b) {
         return new C(b);
     }

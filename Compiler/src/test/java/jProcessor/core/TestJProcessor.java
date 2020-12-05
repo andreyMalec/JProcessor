@@ -31,7 +31,7 @@ public class TestJProcessor {
                 "import javax.inject.Provider;",
                 "import test.TestModule;",
                 "",
-                "public class TestModule_StringProvider implements Provider<String> {",
+                "public final class TestModule_StringProvider implements Provider<String> {",
                 "    private final TestModule module;",
                 "",
                 "    public TestModule_StringProvider(TestModule module) {",

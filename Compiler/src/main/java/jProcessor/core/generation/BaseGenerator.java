@@ -6,7 +6,6 @@ import com.squareup.javapoet.TypeSpec;
 import java.io.IOException;
 
 import javax.annotation.processing.Filer;
-import javax.annotation.processing.RoundEnvironment;
 
 import jProcessor.core.NameManager;
 import jProcessor.util.Logger;
@@ -14,12 +13,10 @@ import jProcessor.util.Logger;
 public abstract class BaseGenerator<T> implements NameManager {
     protected final Logger log;
     protected final Filer filer;
-    protected final RoundEnvironment roundEnv;
 
-    public BaseGenerator(Logger log, Filer filer, RoundEnvironment roundEnv) {
+    public BaseGenerator(Logger log, Filer filer) {
         this.log = log;
         this.filer = filer;
-        this.roundEnv = roundEnv;
     }
 
     public abstract T generate();
