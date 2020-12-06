@@ -2,6 +2,7 @@ package jProcessor.core.generation;
 
 import com.google.common.collect.ImmutableSet;
 import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeName;
@@ -41,6 +42,11 @@ public class InjectorGenerator extends BaseGenerator<Void> {
             throw new IllegalStateException(firstDuplicate.provider.type + " is bound multiple times in " +
                     firstDuplicate.factory.split("_")[0]);
 
+        BindingRequest firstDuplicateRequest = findDuplicate(injection.requests);
+        if (firstDuplicateRequest != null)
+            throw new IllegalStateException(
+                    firstDuplicateRequest.targetType + " constructor is injected multiple times");
+
         packageName = injection.modules.stream().map(this::getPackage)
                 .min((Comparator.comparingInt(it -> it.split("\\.").length))).orElse("");
     }
@@ -52,30 +58,51 @@ public class InjectorGenerator extends BaseGenerator<Void> {
     }
 
     private MethodSpec addInjectMethod(BindingRequest request) {
+        log.note("InjectorGenerator:     Adding " + INJECT + "(" + request.targetType + ") method");
         MethodSpec.Builder builder = MethodSpec.methodBuilder(INJECT).addModifiers(Modifier.PUBLIC)
                 .addParameter(request.targetType, INSTANCE).returns(void.class);
 
-        for (Parameter field : request.fields)
+        for (Parameter field : request.parameters)
             builder.addStatement(INSTANCE + ".$L = $L." + GET + "()", field.name, providerName(field.type));
 
         return builder.build();
     }
 
     private MethodSpec addInjectConstructorMethod(BindingRequest request) {
+        log.note("InjectorGenerator:     Adding " + GET + simpleName(request.targetType) + " method");
         MethodSpec.Builder builder = MethodSpec.methodBuilder(GET + simpleName(request.targetType))
                 .addModifiers(Modifier.PUBLIC).returns(request.targetType);
 
+        boolean isLazy = request.targetKind == TargetKind.SINGLETON_CONSTRUCTOR;
         StringBuilder sb = new StringBuilder();
-        sb.append("return new ");
-        sb.append("$L(");
-        appendCommaSeparated(sb, "$L." + GET + "()", request.fields.size());
-        sb.append(")");
-        Object[] values = copyOf(
-                request.fields.stream().map(it -> providerName(it.type)).toArray(),
-                simpleName(request.targetType)
-        );
+        if (isLazy)
+            sb.append("$L = new $L(");
+        else
+            sb.append("return new $L(");
 
-        builder.addStatement(sb.toString(), values);
+        appendCommaSeparated(sb, "$L." + GET + "()", request.parameters.size());
+        sb.append(")");
+
+        if (isLazy) {
+            Object[] values = copyOf(
+                    request.parameters.stream().map(it -> providerName(it.type)).toArray(),
+                    fieldName(request.targetType),
+                    simpleName(request.targetType)
+            );
+
+            builder.addCode(CodeBlock.builder()
+                    .beginControlFlow("if ($L == null)", fieldName(request.targetType))
+                    .addStatement(sb.toString(), values).endControlFlow().build());
+
+            builder.addStatement("return $L", fieldName(request.targetType));
+        } else {
+            Object[] values = copyOf(
+                    request.parameters.stream().map(it -> providerName(it.type)).toArray(),
+                    simpleName(request.targetType)
+            );
+
+            builder.addStatement(sb.toString(), values);
+        }
 
         return builder.build();
     }
@@ -92,7 +119,8 @@ public class InjectorGenerator extends BaseGenerator<Void> {
             TypeName module = (TypeName) injection.modules.stream()
                     .filter(it -> simpleName(it).equals(binding.factory.split("_")[0])).toArray()[0];
 
-            Object[] values = copyOf(binding.providerParams.stream().map(it -> it.name).toArray(),
+            Object[] values = copyOf(
+                    binding.providerParams.stream().map(it -> it.name).toArray(),
                     binding.provider.name,
                     getPackage(module) + "." + fieldName(module),
                     binding.factory,
@@ -119,6 +147,7 @@ public class InjectorGenerator extends BaseGenerator<Void> {
     }
 
     private TypeSpec createInjector() {
+        log.note("InjectorGenerator: Creating injector");
         TypeSpec.Builder builder = TypeSpec.classBuilder(INJECTOR)
                 .addModifiers(Modifier.PUBLIC, Modifier.FINAL);
 
@@ -132,9 +161,12 @@ public class InjectorGenerator extends BaseGenerator<Void> {
         builder.addMethod(addConstructor());
 
         for (BindingRequest request : injection.requests)
-            if (request.targetKind == TargetKind.CONSTRUCTOR)
+            if (request.targetKind == TargetKind.CONSTRUCTOR ||
+                    request.targetKind == TargetKind.SINGLETON_CONSTRUCTOR) {
+                if (request.targetKind == TargetKind.SINGLETON_CONSTRUCTOR)
+                    builder.addField(request.targetType, fieldName(request.targetType), Modifier.PRIVATE);
                 builder.addMethod(addInjectConstructorMethod(request));
-            else
+            } else
                 builder.addMethod(addInjectMethod(request));
 
         builder.addMethod(addGetMethod());

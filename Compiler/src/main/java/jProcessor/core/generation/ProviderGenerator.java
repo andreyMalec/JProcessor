@@ -126,6 +126,7 @@ public class ProviderGenerator extends BaseGenerator<Binding> {
     }
 
     private TypeSpec createProvider() {
+        log.note("ProviderGenerator: Creating provider for " + providerType);
         String moduleName = simpleName(moduleType);
 
         TypeSpec.Builder builder = TypeSpec

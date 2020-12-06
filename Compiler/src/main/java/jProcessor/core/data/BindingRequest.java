@@ -7,14 +7,14 @@ import com.squareup.javapoet.TypeName;
 public final class BindingRequest {
     public final TypeName targetType;
     public final TargetKind targetKind;
-    public final ImmutableList<Parameter> fields;
+    public final ImmutableList<Parameter> parameters;
 
     public BindingRequest(
-            TypeName targetType, TargetKind targetKind, ImmutableList<Parameter> fields
+            TypeName targetType, TargetKind targetKind, ImmutableList<Parameter> parameters
     ) {
         this.targetType = targetType;
         this.targetKind = targetKind;
-        this.fields = fields;
+        this.parameters = parameters;
     }
 
     @Override
@@ -24,19 +24,26 @@ public final class BindingRequest {
         if (o == null || getClass() != o.getClass())
             return false;
         BindingRequest request = (BindingRequest) o;
-        return Objects.equal(targetType, request.targetType) && targetKind == request.targetKind &&
-                Objects.equal(fields, request.fields);
+        return Objects.equal(targetType, request.targetType) && (targetKind == request.targetKind ||
+                (targetKind == TargetKind.CONSTRUCTOR &&
+                        request.targetKind == TargetKind.SINGLETON_CONSTRUCTOR) ||
+                (targetKind == TargetKind.SINGLETON_CONSTRUCTOR &&
+                        request.targetKind == TargetKind.CONSTRUCTOR));
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(targetType, targetKind, fields);
+        int result = 1;
+        result = 31 * result + (targetType == null ? 0 : targetType.hashCode());
+        result = 31 * result + (targetKind == null ? 0 :
+                targetKind == TargetKind.FIELD ? targetKind.hashCode() : TargetKind.CONSTRUCTOR.hashCode());
+        return result;
     }
 
     @Override
     public String toString() {
         return "BindingRequest{" + "targetType=" + targetType + ", targetKind=" + targetKind + ", fields=" +
-                fields + '}';
+                parameters + '}';
     }
 
 }

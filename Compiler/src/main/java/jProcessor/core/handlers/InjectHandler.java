@@ -10,6 +10,7 @@ import java.util.Map;
 
 import javax.annotation.processing.RoundEnvironment;
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
@@ -58,7 +59,11 @@ public class InjectHandler extends AnnotationHandler implements NameManager {
             } else if (element.getKind() == ElementKind.CONSTRUCTOR) {
                 ExecutableElement constructor = (ExecutableElement) element;
                 TypeName targetType = name(constructor.getEnclosingElement().asType());
-                Pair<TypeName, TargetKind> key = Pair.of(targetType, TargetKind.CONSTRUCTOR);
+                Pair<TypeName, TargetKind> key;
+                if (element.getAnnotation(Singleton.class) == null)
+                    key = Pair.of(targetType, TargetKind.CONSTRUCTOR);
+                else
+                    key = Pair.of(targetType, TargetKind.SINGLETON_CONSTRUCTOR);
                 List<Parameter> fields = new ArrayList<>();
                 for (VariableElement parameter : constructor.getParameters())
                     fields.add(new Parameter(parameter.getSimpleName().toString(), name(parameter.asType())));
