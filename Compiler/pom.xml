@@ -35,17 +35,10 @@
             <version>${javapoet.version}</version>
         </dependency>
         <dependency>
-            <artifactId>tools</artifactId>
-            <groupId>com.sun</groupId>
-            <scope>system</scope>
-            <systemPath>${java.home}/lib/tools.jar</systemPath>
-            <version>1.5.0</version>
-        </dependency>
-        <dependency>
             <artifactId>compile-testing</artifactId>
             <groupId>com.google.testing.compile</groupId>
             <scope>test</scope>
-            <version>0.19</version>
+            <version>${compile-testing.version}</version>
         </dependency>
         <dependency>
             <artifactId>javax.inject</artifactId>
@@ -59,12 +52,13 @@
     <parent>
         <artifactId>JProcessor</artifactId>
         <groupId>com.malec</groupId>
-        <version>1.6</version>
+        <version>1.7</version>
     </parent>
 
     <properties>
         <autoService.version>1.0-rc7</autoService.version>
         <javapoet.version>1.13.0</javapoet.version>
         <javax.version>1</javax.version>
+        <compile-testing.version>0.19</compile-testing.version>
     </properties>
 </project>

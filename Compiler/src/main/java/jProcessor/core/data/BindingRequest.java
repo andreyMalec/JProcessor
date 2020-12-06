@@ -6,10 +6,14 @@ import com.squareup.javapoet.TypeName;
 
 public final class BindingRequest {
     public final TypeName targetType;
+    public final TargetKind targetKind;
     public final ImmutableList<Parameter> fields;
 
-    public BindingRequest(TypeName targetType, ImmutableList<Parameter> fields) {
+    public BindingRequest(
+            TypeName targetType, TargetKind targetKind, ImmutableList<Parameter> fields
+    ) {
         this.targetType = targetType;
+        this.targetKind = targetKind;
         this.fields = fields;
     }
 
@@ -19,17 +23,20 @@ public final class BindingRequest {
             return true;
         if (o == null || getClass() != o.getClass())
             return false;
-        BindingRequest that = (BindingRequest) o;
-        return Objects.equal(targetType, that.targetType) && Objects.equal(fields, that.fields);
+        BindingRequest request = (BindingRequest) o;
+        return Objects.equal(targetType, request.targetType) && targetKind == request.targetKind &&
+                Objects.equal(fields, request.fields);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(targetType, fields);
+        return Objects.hashCode(targetType, targetKind, fields);
     }
 
     @Override
     public String toString() {
-        return "BindingRequest{" + "targetType=" + targetType + ", fields=" + fields + '}';
+        return "BindingRequest{" + "targetType=" + targetType + ", targetKind=" + targetKind + ", fields=" +
+                fields + '}';
     }
+
 }

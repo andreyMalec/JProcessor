@@ -9,6 +9,9 @@ public class DependencyConsumer {
     @Inject
     public Dependency dependency;
 
+    @Inject
+    public D d;
+
     public DependencyConsumer() {
         Injector.get().inject(this);
     }

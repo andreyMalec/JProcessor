@@ -9,13 +9,17 @@ public class A {
     @Inject
     public D d;
 
-    @Inject
-    public List<List<Cat>> cats;
+    private List<List<Cat>> cats;
+
+    private List<Set<Cat>> catsSet;
 
     @Inject
-    public List<Set<Cat>> catsSet;
+    public A(List<List<Cat>> cats, List<Set<Cat>> catsSet) {
+        this.cats = cats;
+        this.catsSet = catsSet;
+    }
 
-    public A() {
-        Injector.get().inject(this);
+    public List<List<Cat>> getCats() {
+        return cats;
     }
 }

@@ -36,20 +36,11 @@ public class Ext {
             sb.append(value);
     }
 
-    public static void appendArguments(StringBuilder sb, String argument, int count) {
+    public static void appendCommaSeparated(StringBuilder sb, String argument, int count) {
         for (int i = 0; i < count; i++) {
             sb.append(argument);
             if (i + 1 < count)
                 sb.append(", ");
         }
-    }
-
-    public static void appendCall(StringBuilder sb, String argument, int argumentsCount) {
-        sb.append("$L($L");
-        if (argumentsCount > 0) {
-            sb.append(", ");
-            appendArguments(sb, argument, argumentsCount);
-        }
-        sb.append(")");
     }
 }

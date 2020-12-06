@@ -37,7 +37,6 @@ public final class Injection {
 
     @Override
     public String toString() {
-        return "Injection{" + "modules=" + modules + ", bindings=" + bindings + ", requests=" + requests +
-                '}';
+        return "Injection{" + "modules=" + modules + ", bindings=" + bindings + ", requests=" + requests + '}';
     }
 }

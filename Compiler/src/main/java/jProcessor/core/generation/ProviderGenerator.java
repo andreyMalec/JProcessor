@@ -19,7 +19,6 @@ import jProcessor.core.data.Parameter;
 import jProcessor.util.Logger;
 
 import static jProcessor.util.Ext.append;
-import static jProcessor.util.Ext.appendCall;
 import static jProcessor.util.Ext.copyOf;
 
 public class ProviderGenerator extends BaseGenerator<Binding> {
@@ -71,7 +70,7 @@ public class ProviderGenerator extends BaseGenerator<Binding> {
         else
             sb.append("return ");
 
-        appendCall(sb, "$L." + GET + "()", providerParams.size());
+        appendProviderCall(sb, "$L." + GET + "()", providerParams.size());
 
         if (isLazy) {
             Object[] values = copyOf(providerParamsNames, fieldName(providerType), providerName, MODULE);
@@ -139,11 +138,7 @@ public class ProviderGenerator extends BaseGenerator<Binding> {
                     .addModifiers(Modifier.PRIVATE, Modifier.STATIC).build());
 
         for (Parameter param : providerParams)
-            builder.addField(provider(param.type),
-                    providerName(param.type),
-                    Modifier.PRIVATE,
-                    Modifier.FINAL
-            );
+            builder.addField(provider(param.type), providerName(param.type), Modifier.PRIVATE, Modifier.FINAL);
 
         builder.addSuperinterface(provider(providerType));
 

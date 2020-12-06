@@ -17,13 +17,12 @@ import jProcessor.core.data.Binding;
 import jProcessor.core.data.BindingRequest;
 import jProcessor.core.data.Injection;
 import jProcessor.core.data.Parameter;
+import jProcessor.core.data.TargetKind;
 import jProcessor.util.Logger;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static jProcessor.util.Ext.appendCall;
+import static jProcessor.util.Ext.appendCommaSeparated;
 import static jProcessor.util.Ext.copyOf;
 import static jProcessor.util.Ext.findDuplicate;
-import static jProcessor.util.Ext.firstOrNull;
 
 @SuppressWarnings("UnstableApiUsage")
 public class InjectorGenerator extends BaseGenerator<Void> {
@@ -56,13 +55,27 @@ public class InjectorGenerator extends BaseGenerator<Void> {
         MethodSpec.Builder builder = MethodSpec.methodBuilder(INJECT).addModifiers(Modifier.PUBLIC)
                 .addParameter(request.targetType, INSTANCE).returns(void.class);
 
-        for (Parameter field : request.fields) {
-            String providerName = checkNotNull(firstOrNull(
-                    injection.bindings,
-                    it -> it.provider.type.toString().equals(field.type.toString())
-            )).provider.name;
-            builder.addStatement(INSTANCE + ".$L = $L." + GET + "()", field.name, providerName);
-        }
+        for (Parameter field : request.fields)
+            builder.addStatement(INSTANCE + ".$L = $L." + GET + "()", field.name, providerName(field.type));
+
+        return builder.build();
+    }
+
+    private MethodSpec addInjectConstructorMethod(BindingRequest request) {
+        MethodSpec.Builder builder = MethodSpec.methodBuilder(GET + simpleName(request.targetType))
+                .addModifiers(Modifier.PUBLIC).returns(request.targetType);
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("return new ");
+        sb.append("$L(");
+        appendCommaSeparated(sb, "$L." + GET + "()", request.fields.size());
+        sb.append(")");
+        Object[] values = copyOf(
+                request.fields.stream().map(it -> providerName(it.type)).toArray(),
+                simpleName(request.targetType)
+        );
+
+        builder.addStatement(sb.toString(), values);
 
         return builder.build();
     }
@@ -79,8 +92,7 @@ public class InjectorGenerator extends BaseGenerator<Void> {
             TypeName module = (TypeName) injection.modules.stream()
                     .filter(it -> simpleName(it).equals(binding.factory.split("_")[0])).toArray()[0];
 
-            Object[] values = copyOf(
-                    binding.providerParams.stream().map(it -> it.name).toArray(),
+            Object[] values = copyOf(binding.providerParams.stream().map(it -> it.name).toArray(),
                     binding.provider.name,
                     getPackage(module) + "." + fieldName(module),
                     binding.factory,
@@ -89,7 +101,7 @@ public class InjectorGenerator extends BaseGenerator<Void> {
 
             StringBuilder sb = new StringBuilder();
             sb.append("this.$L = new $L.");
-            appendCall(sb, "$L", binding.providerParams.size());
+            appendProviderCall(sb, "$L", binding.providerParams.size());
 
             builder.addStatement(sb.toString(), values);
         }
@@ -120,7 +132,10 @@ public class InjectorGenerator extends BaseGenerator<Void> {
         builder.addMethod(addConstructor());
 
         for (BindingRequest request : injection.requests)
-            builder.addMethod(addInjectMethod(request));
+            if (request.targetKind == TargetKind.CONSTRUCTOR)
+                builder.addMethod(addInjectConstructorMethod(request));
+            else
+                builder.addMethod(addInjectMethod(request));
 
         builder.addMethod(addGetMethod());
 

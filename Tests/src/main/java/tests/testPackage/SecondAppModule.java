@@ -45,6 +45,7 @@ public class SecondAppModule {
     }
 
     @Provides
+    @Singleton
     public D d(B bob, C c) {
         return new D(bob, c);
     }

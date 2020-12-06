@@ -10,6 +10,8 @@ import javax.annotation.processing.Filer;
 import jProcessor.core.NameManager;
 import jProcessor.util.Logger;
 
+import static jProcessor.util.Ext.appendCommaSeparated;
+
 public abstract class BaseGenerator<T> implements NameManager {
     protected final Logger log;
     protected final Filer filer;
@@ -17,6 +19,15 @@ public abstract class BaseGenerator<T> implements NameManager {
     public BaseGenerator(Logger log, Filer filer) {
         this.log = log;
         this.filer = filer;
+    }
+
+    protected static void appendProviderCall(StringBuilder sb, String argument, int argumentsCount) {
+        sb.append("$L($L");
+        if (argumentsCount > 0) {
+            sb.append(", ");
+            appendCommaSeparated(sb, argument, argumentsCount);
+        }
+        sb.append(")");
     }
 
     public abstract T generate();

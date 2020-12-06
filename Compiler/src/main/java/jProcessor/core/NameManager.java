@@ -83,6 +83,6 @@ public interface NameManager {
         if (name.isPrimitive())
             return name.box();
         else
-            return TypeName.get(type);
+            return name;
     }
 }
