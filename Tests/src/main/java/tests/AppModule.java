@@ -14,7 +14,7 @@ public class AppModule {
     }
 
     @Provides
-    public C c(B b) {
+    public static C c(B b) {
         return new C(b);
     }
 }

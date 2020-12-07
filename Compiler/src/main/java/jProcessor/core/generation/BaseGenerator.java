@@ -7,12 +7,12 @@ import java.io.IOException;
 
 import javax.annotation.processing.Filer;
 
-import jProcessor.core.NameManager;
+import jProcessor.core.Names;
 import jProcessor.util.Logger;
 
 import static jProcessor.util.Ext.appendCommaSeparated;
 
-public abstract class BaseGenerator<T> implements NameManager {
+public abstract class BaseGenerator<T> implements Names {
     protected final Logger log;
     protected final Filer filer;
 

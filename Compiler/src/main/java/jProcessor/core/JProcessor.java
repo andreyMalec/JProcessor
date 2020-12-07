@@ -24,13 +24,19 @@ import jProcessor.core.generation.InjectorGenerator;
 import jProcessor.core.generation.ProviderGenerator;
 import jProcessor.core.handlers.InjectHandler;
 import jProcessor.core.handlers.ModuleHandler;
+import jProcessor.core.validation.BindingDuplicateValidator;
+import jProcessor.core.validation.BindingRequestDuplicateValidator;
+import jProcessor.core.validation.InjectionValidator;
 import jProcessor.util.BaseLogger;
 import jProcessor.util.Logger;
 
 @AutoService(Processor.class)
 @SupportedAnnotationTypes({"jProcessor.Module", "jProcessor.Provides"})
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
-public class JProcessor extends AbstractProcessor implements NameManager {
+public class JProcessor extends AbstractProcessor {
+    private final InjectionValidator injectionValidator = new InjectionValidator(new BindingDuplicateValidator(),
+            new BindingRequestDuplicateValidator()
+    );
     private Logger log;
     private Filer filer;
 
@@ -61,6 +67,8 @@ public class JProcessor extends AbstractProcessor implements NameManager {
             ImmutableList<TypeName> modules = moduleHandler.getModules();
 
             Injection injection = new Injection(modules, bindings.build(), bindingRequests);
+
+            injectionValidator.validate(injection);
 
             new InjectorGenerator(log, filer, injection).generate();
         } catch (RuntimeException e) {

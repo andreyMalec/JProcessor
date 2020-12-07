@@ -18,8 +18,10 @@ import jProcessor.core.data.Binding;
 import jProcessor.core.data.Parameter;
 import jProcessor.util.Logger;
 
+import static jProcessor.core.Names.name;
 import static jProcessor.util.Ext.append;
 import static jProcessor.util.Ext.copyOf;
+import static jProcessor.util.GuavaCollectors.toImmutableList;
 
 public class ProviderGenerator extends BaseGenerator<Binding> {
     private final ImmutableList<Parameter> providerParams;
@@ -30,12 +32,11 @@ public class ProviderGenerator extends BaseGenerator<Binding> {
     private final TypeName moduleType;
     private final String packageName;
 
-    @SuppressWarnings("UnstableApiUsage")
     public ProviderGenerator(Logger log, Filer filer, ExecutableElement provider) {
         super(log, filer);
         providerParams = provider.getParameters().stream()
                 .map(it -> new Parameter(providerName(it.asType()), name(it.asType())))
-                .collect(ImmutableList.toImmutableList());
+                .collect(toImmutableList());
         providerParamsNames = providerParams.stream().map(it -> it.name).toArray();
 
         providerType = name(provider.getReturnType());

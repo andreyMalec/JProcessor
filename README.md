@@ -89,7 +89,7 @@ public class Car {
     public Brand brand;
 }
 ```
-In the case of injection into public fields, we can inject directly in the constructor:
+In the case of injection into public fields, we can inject directly into the constructor:
 ```java
 public class Car {
     @Inject

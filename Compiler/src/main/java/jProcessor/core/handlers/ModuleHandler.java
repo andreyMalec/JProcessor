@@ -10,10 +10,12 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 
 import jProcessor.Module;
-import jProcessor.core.NameManager;
 import jProcessor.util.Logger;
 
-public class ModuleHandler extends AnnotationHandler implements NameManager {
+import static jProcessor.core.Names.name;
+import static jProcessor.util.GuavaCollectors.toImmutableList;
+
+public class ModuleHandler extends AnnotationHandler {
     private final ImmutableList.Builder<ExecutableElement> providers = new ImmutableList.Builder<>();
     private final ImmutableList.Builder<TypeName> modules = new ImmutableList.Builder<>();
 
@@ -21,10 +23,9 @@ public class ModuleHandler extends AnnotationHandler implements NameManager {
         super(roundEnv, logger);
     }
 
-    @SuppressWarnings("UnstableApiUsage")
     public ImmutableList<ExecutableElement> getProviders() {
         return providers.build().stream().sorted(Comparator.comparingInt(it -> it.getParameters().size()))
-                .collect(ImmutableList.toImmutableList());
+                .collect(toImmutableList());
     }
 
     public ImmutableList<TypeName> getModules() {

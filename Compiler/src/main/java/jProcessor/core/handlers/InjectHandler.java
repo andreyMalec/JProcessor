@@ -16,17 +16,18 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.VariableElement;
 
-import jProcessor.core.NameManager;
 import jProcessor.core.data.BindingRequest;
 import jProcessor.core.data.Parameter;
 import jProcessor.core.data.TargetKind;
+import jProcessor.core.validation.AccessibleValidator;
 import jProcessor.util.Logger;
 import jProcessor.util.Pair;
 
-import static jProcessor.core.IllegalAccessException.checkAccessible;
+import static jProcessor.core.Names.name;
 
-public class InjectHandler extends AnnotationHandler implements NameManager {
+public class InjectHandler extends AnnotationHandler {
     private final Map<Pair<TypeName, TargetKind>, List<Parameter>> requests = new HashMap<>();
+    private final AccessibleValidator accessibleValidator = new AccessibleValidator();
 
     public InjectHandler(RoundEnvironment roundEnv, Logger logger) {
         super(roundEnv, logger);
@@ -44,7 +45,7 @@ public class InjectHandler extends AnnotationHandler implements NameManager {
     public void handleAnnotation() {
         for (Element element : roundEnv.getElementsAnnotatedWith(Inject.class)) {
             Element target = element.getEnclosingElement();
-            checkAccessible(element);
+            accessibleValidator.validate(element);
             if (element.getKind() == ElementKind.FIELD) {
                 TypeName targetType = name(target.asType());
                 Pair<TypeName, TargetKind> key = Pair.of(targetType, TargetKind.FIELD);

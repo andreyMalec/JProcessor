@@ -23,9 +23,8 @@ import jProcessor.util.Logger;
 
 import static jProcessor.util.Ext.appendCommaSeparated;
 import static jProcessor.util.Ext.copyOf;
-import static jProcessor.util.Ext.findDuplicate;
+import static jProcessor.util.GuavaCollectors.toImmutableSet;
 
-@SuppressWarnings("UnstableApiUsage")
 public class InjectorGenerator extends BaseGenerator<Void> {
     private final Injection injection;
     private final ImmutableSet<String> providersTypes;
@@ -35,17 +34,7 @@ public class InjectorGenerator extends BaseGenerator<Void> {
         super(log, filer);
         this.injection = injection;
         providersTypes = injection.bindings.stream().map(it -> it.provider.type.toString())
-                .collect(ImmutableSet.toImmutableSet());
-
-        Binding firstDuplicate = findDuplicate(injection.bindings);
-        if (firstDuplicate != null)
-            throw new IllegalStateException(firstDuplicate.provider.type + " is bound multiple times in " +
-                    firstDuplicate.factory.split("_")[0]);
-
-        BindingRequest firstDuplicateRequest = findDuplicate(injection.requests);
-        if (firstDuplicateRequest != null)
-            throw new IllegalStateException(
-                    firstDuplicateRequest.targetType + " constructor is injected multiple times");
+                .collect(toImmutableSet());
 
         packageName = injection.modules.stream().map(this::getPackage)
                 .min((Comparator.comparingInt(it -> it.split("\\.").length))).orElse("");

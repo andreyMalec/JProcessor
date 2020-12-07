@@ -39,5 +39,5 @@
         <parent.version>${project.version}</parent.version>
     </properties>
 
-    <version>1.8</version>
+    <version>1.8.1</version>
 </project>

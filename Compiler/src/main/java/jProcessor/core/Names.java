@@ -7,7 +7,7 @@ import com.squareup.javapoet.TypeName;
 import javax.inject.Provider;
 import javax.lang.model.type.TypeMirror;
 
-public interface NameManager {
+public interface Names {
     String GET = "get";
     String PROVIDER = "Provider";
     String INSTANCE = "instance";
@@ -15,12 +15,20 @@ public interface NameManager {
     String INJECT = "inject";
     String INJECTOR = "Injector";
 
-    default String getPackage(String name) {
-        return name.substring(0, name.lastIndexOf("."));
+    static TypeName name(TypeMirror type) {
+        TypeName name = TypeName.get(type);
+        if (name.isPrimitive())
+            return name.box();
+        else
+            return name;
     }
 
     default String getPackage(TypeName name) {
         return getPackage(name.toString());
+    }
+
+    default String getPackage(String name) {
+        return name.substring(0, name.lastIndexOf("."));
     }
 
     default String fieldName(TypeName name) {
@@ -40,24 +48,24 @@ public interface NameManager {
         return ParameterizedTypeName.get(ClassName.get(Provider.class), type);
     }
 
+    default String providerName(TypeMirror name) {
+        return providerName(name(name));
+    }
+
     default String providerName(TypeName name) {
-        return fieldName(name) + PROVIDER;
+        return providerName(name.toString());
     }
 
     default String providerName(String name) {
         return fieldName(name) + PROVIDER;
     }
 
-    default String providerName(TypeMirror name) {
-        return providerName(name(name));
+    default String simpleName(TypeMirror type) {
+        return simpleName(name(type));
     }
 
     default String simpleName(TypeName type) {
         return simpleName(type.toString());
-    }
-
-    default String simpleName(TypeMirror type) {
-        return simpleName(name(type));
     }
 
     default String simpleName(String type) {
@@ -76,13 +84,5 @@ public interface NameManager {
             return type;
         else
             return a[a.length - 1];
-    }
-
-    default TypeName name(TypeMirror type) {
-        TypeName name = TypeName.get(type);
-        if (name.isPrimitive())
-            return name.box();
-        else
-            return name;
     }
 }

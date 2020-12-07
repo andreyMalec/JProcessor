@@ -8,7 +8,7 @@ import javax.inject.Singleton;
 
 public class A {
     @Inject
-    public D d;
+    public static D d;
 
     private List<List<Cat>> cats;
 
