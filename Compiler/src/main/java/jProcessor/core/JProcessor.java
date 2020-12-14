@@ -14,12 +14,12 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
-import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 
 import jProcessor.core.data.Binding;
 import jProcessor.core.data.BindingRequest;
 import jProcessor.core.data.Injection;
+import jProcessor.core.data.Provider;
 import jProcessor.core.generation.InjectorGenerator;
 import jProcessor.core.generation.ProviderGenerator;
 import jProcessor.core.handlers.InjectHandler;
@@ -38,14 +38,17 @@ public class JProcessor extends AbstractProcessor {
             new BindingRequestDuplicateValidator()
     );
     private Logger log;
-    private Filer filer;
+    private ProviderGenerator providerGenerator;
+    private InjectorGenerator injectorGenerator;
 
     @Override
     public synchronized void init(ProcessingEnvironment env) {
         super.init(env);
-        filer = env.getFiler();
+        Filer filer = env.getFiler();
 
         log = new BaseLogger(env.getMessager());
+        providerGenerator = new ProviderGenerator(log, filer);
+        injectorGenerator = new InjectorGenerator(log, filer);
     }
 
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
@@ -61,8 +64,8 @@ public class JProcessor extends AbstractProcessor {
 
             ModuleHandler moduleHandler = new ModuleHandler(roundEnv, log);
             moduleHandler.handleAnnotation();
-            for (ExecutableElement provider : moduleHandler.getProviders())
-                bindings.add(new ProviderGenerator(log, filer, provider).generate());
+            for (Provider provider : moduleHandler.getProviders())
+                bindings.add(providerGenerator.generate(provider));
 
             ImmutableList<TypeName> modules = moduleHandler.getModules();
 
@@ -70,7 +73,7 @@ public class JProcessor extends AbstractProcessor {
 
             injectionValidator.validate(injection);
 
-            new InjectorGenerator(log, filer, injection).generate();
+            injectorGenerator.generate(injection);
         } catch (RuntimeException e) {
             log.error(e);
         }

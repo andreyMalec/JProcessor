@@ -25,25 +25,27 @@ import static jProcessor.util.Ext.appendCommaSeparated;
 import static jProcessor.util.Ext.copyOf;
 import static jProcessor.util.GuavaCollectors.toImmutableSet;
 
-public class InjectorGenerator extends BaseGenerator<Void> {
-    private final Injection injection;
-    private final ImmutableSet<String> providersTypes;
-    private final String packageName;
+public class InjectorGenerator extends BaseGenerator {
+    private Injection injection;
+    private ImmutableSet<String> providersTypes;
+    private String packageName;
 
-    public InjectorGenerator(Logger log, Filer filer, Injection injection) {
+    public InjectorGenerator(Logger log, Filer filer) {
         super(log, filer);
+    }
+
+    public void generate(Injection injection) {
+        initInjection(injection);
+        createFile(createInjector(), packageName);
+    }
+
+    private void initInjection(Injection injection) {
         this.injection = injection;
         providersTypes = injection.bindings.stream().map(it -> it.provider.type.toString())
                 .collect(toImmutableSet());
 
         packageName = injection.modules.stream().map(this::getPackage)
                 .min((Comparator.comparingInt(it -> it.split("\\.").length))).orElse("");
-    }
-
-    @Override
-    public Void generate() {
-        createFile(createInjector(), packageName);
-        return null;
     }
 
     private MethodSpec addInjectMethod(BindingRequest request) {
@@ -73,8 +75,7 @@ public class InjectorGenerator extends BaseGenerator<Void> {
         sb.append(")");
 
         if (isLazy) {
-            Object[] values = copyOf(
-                    request.parameters.stream().map(it -> providerName(it.type)).toArray(),
+            Object[] values = copyOf(request.parameters.stream().map(it -> providerName(it.type)).toArray(),
                     fieldName(request.targetType),
                     simpleName(request.targetType)
             );
@@ -85,8 +86,7 @@ public class InjectorGenerator extends BaseGenerator<Void> {
 
             builder.addStatement("return $L", fieldName(request.targetType));
         } else {
-            Object[] values = copyOf(
-                    request.parameters.stream().map(it -> providerName(it.type)).toArray(),
+            Object[] values = copyOf(request.parameters.stream().map(it -> providerName(it.type)).toArray(),
                     simpleName(request.targetType)
             );
 
@@ -108,9 +108,8 @@ public class InjectorGenerator extends BaseGenerator<Void> {
             TypeName module = (TypeName) injection.modules.stream()
                     .filter(it -> simpleName(it).equals(binding.factory.split("_")[0])).toArray()[0];
 
-            Object[] values = copyOf(
-                    binding.providerParams.stream().map(it -> it.name).toArray(),
-                    binding.provider.name,
+            Object[] values = copyOf(binding.provider.parameters.stream().map(it -> it.name).toArray(),
+                    providerName(binding.provider.type),
                     getPackage(module) + "." + fieldName(module),
                     binding.factory,
                     providerName(module)
@@ -118,7 +117,7 @@ public class InjectorGenerator extends BaseGenerator<Void> {
 
             StringBuilder sb = new StringBuilder();
             sb.append("this.$L = new $L.");
-            appendProviderCall(sb, "$L", binding.providerParams.size());
+            appendProviderCall(sb, "$L", binding.provider.parameters.size());
 
             builder.addStatement(sb.toString(), values);
         }
@@ -141,7 +140,11 @@ public class InjectorGenerator extends BaseGenerator<Void> {
                 .addModifiers(Modifier.PUBLIC, Modifier.FINAL);
 
         for (Binding binding : injection.bindings)
-            builder.addField(provider(binding.provider.type), binding.provider.name, Modifier.PRIVATE);
+            builder.addField(
+                    provider(binding.provider.type),
+                    providerName(binding.provider.type),
+                    Modifier.PRIVATE
+            );
 
         builder.addField(FieldSpec.builder(ClassName.get(packageName, INJECTOR), fieldName(INJECTOR))
                 .addModifiers(Modifier.PRIVATE, Modifier.FINAL, Modifier.STATIC)
@@ -164,7 +167,7 @@ public class InjectorGenerator extends BaseGenerator<Void> {
     }
 
     private void checkProviderFor(Binding binding) {
-        for (Object paramType : binding.providerParams.stream().map(it -> it.type.toString()).toArray())
+        for (Object paramType : binding.provider.parameters.stream().map(it -> it.type.toString()).toArray())
             if (!providersTypes.contains(paramType))
                 throw new ProviderNotFoundException(paramType);
     }

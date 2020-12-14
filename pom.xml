@@ -31,6 +31,7 @@
     <modules>
         <module>Compiler</module>
         <module>Tests</module>
+        <module>Samples</module>
     </modules>
     <packaging>pom</packaging>
 
@@ -39,5 +40,5 @@
         <parent.version>${project.version}</parent.version>
     </properties>
 
-    <version>1.8.1</version>
+    <version>1.8.2</version>
 </project>

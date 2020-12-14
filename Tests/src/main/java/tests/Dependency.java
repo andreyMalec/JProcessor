@@ -1,9 +1,11 @@
 package tests;
 
-public class Dependency {
-    public Cat cat;
+import java.util.List;
 
-    public Dependency(Cat cat) {
-        this.cat = cat;
+public class Dependency extends BaseDependency {
+    public List<Cat> cats;
+
+    public Dependency(List<Cat> cats) {
+        this.cats = cats;
     }
 }

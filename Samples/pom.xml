@@ -2,24 +2,20 @@
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns="http://maven.apache.org/POM/4.0.0"
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <artifactId>Tests</artifactId>
+    <artifactId>Samples</artifactId>
     <dependencies>
         <dependency>
             <artifactId>jProcessor-compiler</artifactId>
             <groupId>com.malec</groupId>
             <version>${parent.version}</version>
         </dependency>
-        <dependency>
-            <artifactId>Samples</artifactId>
-            <groupId>com.malec</groupId>
-            <version>${parent.version}</version>
-        </dependency>
     </dependencies>
-    <modelVersion>4.0.0</modelVersion>
 
+    <modelVersion>4.0.0</modelVersion>
     <parent>
         <artifactId>JProcessor</artifactId>
         <groupId>com.malec</groupId>
         <version>1.8.2</version>
     </parent>
+
 </project>

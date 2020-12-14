@@ -1,9 +1,8 @@
 package tests;
 
-public class B {
-    public int value;
+import javax.inject.Inject;
 
-    public B(int value) {
-        this.value = value;
-    }
+public class B {
+    @Inject
+    public A a;
 }

@@ -2,14 +2,11 @@ package tests;
 
 import javax.inject.Inject;
 
-public class DependencyConsumer {
+public class BaseDependency {
     @Inject
     public Cat cat;
 
-    @Inject
-    public Dependency dependency;
-
-    public DependencyConsumer() {
+    protected BaseDependency() {
         Injector.get().inject(this);
     }
 }
